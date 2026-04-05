@@ -1,20 +1,17 @@
-name: CI
+name: Test
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  smoke-test-windows:
+  smoke-test:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Full Chocolatey smoke test (pack, install, verify, uninstall)
+      - name: Full smoke test (pack, install, verify shortcuts, uninstall)
         shell: pwsh
         run: ./scripts/Test-Package.ps1

@@ -1,4 +1,4 @@
-name: Package Chocolatey artifact
+name: Package and publish
 
 on:
   workflow_dispatch:
@@ -11,15 +11,47 @@ on:
         description: 'Skip pack/install/uninstall smoke test (not recommended)'
         type: boolean
         default: false
+      sync_from_remote:
+        description: 'Pull latest from origin first (leave off for normal manual runs)'
+        type: boolean
+        default: false
+
+  workflow_call:
+    inputs:
+      push_to_chocolatey:
+        type: boolean
+        description: 'Push to Chocolatey Community when API key is set'
+        default: true
+      skip_smoke_test:
+        type: boolean
+        description: 'Skip smoke test (e.g. already run in check-missive)'
+        default: true
+      sync_from_remote:
+        type: boolean
+        description: 'Pull latest commit from origin (required after check-missive commit)'
+        default: true
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   package:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync with remote (after upstream metadata commit)
+        if: ${{ inputs.sync_from_remote }}
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $branch = '${{ github.ref_name }}'
+          git fetch origin $branch
+          git pull --ff-only origin $branch
 
       - name: Smoke test
         if: ${{ !inputs.skip_smoke_test }}
@@ -53,7 +85,8 @@ jobs:
           Set-StrictMode -Version Latest
           $ErrorActionPreference = 'Stop'
           if (-not $env:CHOCOLATEY_API_KEY) {
-            throw 'CHOCOLATEY_API_KEY secret is not set; cannot push.'
+            Write-Host 'CHOCOLATEY_API_KEY is not set; skipping Chocolatey push.'
+            exit 0
           }
           Push-Location chocolatey\missive
           $nupkg = Get-ChildItem *.nupkg | Sort-Object LastWriteTime -Descending | Select-Object -First 1

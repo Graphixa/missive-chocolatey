@@ -13,8 +13,9 @@ Missive hosts the Windows installer. This repository only holds Chocolatey metad
 ## Status
 
 * **Community maintained** — not an official Missive or Chocolatey package unless Missive adopts it.
-* **CI** runs a full Windows smoke test on every push/PR to `main` (`choco pack` → install → verify shortcuts/exe → uninstall).
-* **Upstream checks** (`check-missive` workflow): on a schedule (or manually), the workflow resolves Missive’s URL, compares the installer hash to `config/state.json`, and only when the binary **changes**: runs the same smoke test, commits updated `config/*.json` and `missive.nuspec`, then **optionally** pushes the new `.nupkg` to the Chocolatey Community Repository if the `CHOCOLATEY_API_KEY` repository secret is set. If the secret is absent, the workflow still tests and commits; push is skipped until you add the key or run **Package Chocolatey artifact** manually.
+* **Test** (`test.yml`): **manual** workflow—run it when you want a full Windows smoke test (`choco pack` → install → verify shortcuts/exe → uninstall). Nothing runs automatically on push/PR unless you add that back.
+* **Check Missive** (`check-missive` workflow): on a schedule (or manually), resolves Missive’s URL and compares the installer hash to `config/state.json`. **Only when the binary changes:** runs the smoke test, commits updated `config/*.json` and `missive.nuspec`, then calls **Package and publish** to `choco pack`, upload the `.nupkg` artifact, and **optionally** `choco push` when `CHOCOLATEY_API_KEY` is set (otherwise push is skipped).
+* **Package and publish** (`package-and-publish.yml`): **manual** workflow for ad-hoc pack + artifact + optional push; also **reused** by `check-missive` after an upstream change.
 
 ## Repository layout
 

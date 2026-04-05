@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: check-missive
@@ -15,6 +16,8 @@ concurrency:
 jobs:
   check:
     runs-on: windows-latest
+    outputs:
+      changed: ${{ steps.resolve.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -47,21 +50,12 @@ jobs:
           git commit -m "chore: update Missive installer metadata"
           git push
 
-      - name: Push package to Chocolatey Community
-        if: success() && steps.resolve.outputs.changed == 'true'
-        env:
-          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
-        shell: pwsh
-        run: |
-          Set-StrictMode -Version Latest
-          $ErrorActionPreference = 'Stop'
-          if (-not $env:CHOCOLATEY_API_KEY) {
-            Write-Host 'CHOCOLATEY_API_KEY is not set; skipping Chocolatey push. Add the secret to enable automatic publish.'
-            exit 0
-          }
-          Push-Location chocolatey\missive
-          choco pack .\missive.nuspec
-          if ($LASTEXITCODE -ne 0) { throw "choco pack failed with $LASTEXITCODE" }
-          $nupkg = Get-ChildItem *.nupkg | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          choco push $nupkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
-          Pop-Location
+  package-and-publish:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    uses: ./.github/workflows/package-and-publish.yml
+    with:
+      skip_smoke_test: true
+      push_to_chocolatey: true
+      sync_from_remote: true
+    secrets: inherit

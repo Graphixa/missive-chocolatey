@@ -29,8 +29,8 @@ Cooperate in good faith: clarify community-maintained status, offer to align wor
 
 ## Automation
 
-* **CI** (`ci.yml`): on push/PR to `main`, runs `scripts/Test-Package.ps1` on a Windows runner so install/uninstall scripts are exercised every change.
-* **check-missive** workflow: scheduled + manual; resolves Missive’s download URL, hashes the installer, and **only** rewrites `config/package.json`, `config/state.json`, and `chocolatey/missive/missive.nuspec` when the upstream binary changes. It then runs the same smoke test, **commits** those files, and **pushes to Chocolatey Community** only if the repository secret **`CHOCOLATEY_API_KEY`** is configured (otherwise the step is skipped—add the key when you are ready for automated publishes).
-* **package-and-publish** workflow: manual; smoke test (optional skip), uploads `.nupkg` artifact, optional push when you enable the workflow input and have the API key secret.
+* **Test** (`test.yml`): **manual** only—runs `scripts/Test-Package.ps1` end-to-end on a Windows runner. Use it before merging risky script changes or when validating a machine.
+* **check-missive** workflow: scheduled + manual; resolves Missive’s download URL, hashes the installer, and **only** updates `config/package.json`, `config/state.json`, and `chocolatey/missive/missive.nuspec` when the upstream binary changes. It then runs the smoke test and **commits** those files. If there was a change, it **calls** the reusable **Package and publish** workflow, which pulls the latest commit, runs `choco pack`, uploads the `.nupkg`, and **pushes to Chocolatey Community** when **`CHOCOLATEY_API_KEY`** is set (otherwise push is skipped).
+* **Package and publish** (`package-and-publish.yml`): **manual** workflow for ad-hoc pack + artifact + optional push; **reused** by `check-missive` after an upstream change (smoke test skipped there because `check-missive` already ran it).
 
 Missive hosts the installer; you do **not** need GitHub Releases to distribute the application—only the Chocolatey package version in the nuspec (and Community listing) needs to advance when you publish a new package build.
