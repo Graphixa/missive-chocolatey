@@ -1,3 +1,4 @@
 *.nupkg
 .resolve-result.json
 *.log
+docs/maintainer-notes.md
