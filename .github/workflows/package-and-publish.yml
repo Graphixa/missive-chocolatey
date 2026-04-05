@@ -1,3 +1,14 @@
+# Packages the Missive Chocolatey downloader and optionally pushes to https://push.chocolatey.org/
+#
+# Ordering (aligned with Chocolatey push expectations and patterns like FontGet's chocolatey-release):
+#   1. Chocolatey CLI available + version check
+#   2. Pack + full local smoke test (install / verify / uninstall) — REQUIRED before any push
+#   3. Validate .nupkg contains required tools/*.ps1 entries
+#   4. Upload artifact
+#   5. Push only after the above succeed (dotnet nuget push --skip-duplicate)
+#
+# Ref: https://docs.chocolatey.org/en-us/create/commands/push/
+
 name: Package and publish
 
 on:
@@ -8,7 +19,7 @@ on:
         type: boolean
         default: false
       skip_smoke_test:
-        description: 'Skip pack/install/uninstall smoke test (not recommended)'
+        description: 'Skip pack/install smoke test (artifact-only dry run; never combined with publish)'
         type: boolean
         default: false
       sync_from_remote:
@@ -24,7 +35,7 @@ on:
         default: true
       skip_smoke_test:
         type: boolean
-        description: 'Skip smoke test (e.g. already run in check-missive)'
+        description: 'Skip smoke only when not publishing (caller already tested)'
         default: true
       sync_from_remote:
         type: boolean
@@ -53,13 +64,35 @@ jobs:
           git fetch origin $branch
           git pull --ff-only origin $branch
 
-      - name: Smoke test
-        if: ${{ !inputs.skip_smoke_test }}
+      - name: Install Chocolatey if missing
+        shell: pwsh
+        run: |
+          $chocoExe = Join-Path $env:ProgramData 'chocolatey\bin\choco.exe'
+          if (-not (Test-Path -LiteralPath $chocoExe)) {
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $env:ProgramData 'chocolatey\bin')
+
+      - name: Verify Chocolatey CLI
+        shell: pwsh
+        run: choco --version
+
+      - name: Set up .NET (nuget push to Chocolatey feed)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Full smoke whenever we will publish, OR when maintainer did not ask to skip tests.
+      # Publishing with skip_smoke_test alone is blocked — must run Test-Package before push.
+      - name: Full smoke test (pack, install, verify, uninstall)
+        if: ${{ !inputs.skip_smoke_test || inputs.push_to_chocolatey }}
         shell: pwsh
         run: ./scripts/Test-Package.ps1
 
-      - name: Chocolatey pack (when smoke test skipped)
-        if: ${{ inputs.skip_smoke_test }}
+      - name: Chocolatey pack only (no install test — not for publish)
+        if: ${{ inputs.skip_smoke_test && !inputs.push_to_chocolatey }}
         shell: pwsh
         run: |
           Set-StrictMode -Version Latest
@@ -70,6 +103,15 @@ jobs:
           Get-ChildItem *.nupkg
           Pop-Location
 
+      - name: Validate nupkg contents
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          $nupkg = Get-ChildItem -Path 'chocolatey\missive' -Filter '*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $nupkg) { throw 'No .nupkg under chocolatey/missive' }
+          ./scripts/Validate-Nupkg.ps1 -NupkgPath $nupkg.FullName
+
       - name: Upload nupkg
         uses: actions/upload-artifact@v4
         with:
@@ -77,7 +119,7 @@ jobs:
           path: chocolatey/missive/*.nupkg
 
       - name: Push to Chocolatey Community
-        if: ${{ inputs.push_to_chocolatey }}
+        if: ${{ success() && inputs.push_to_chocolatey }}
         env:
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
         shell: pwsh
@@ -85,11 +127,10 @@ jobs:
           Set-StrictMode -Version Latest
           $ErrorActionPreference = 'Stop'
           if (-not $env:CHOCOLATEY_API_KEY) {
-            Write-Host 'CHOCOLATEY_API_KEY is not set; skipping Chocolatey push.'
+            Write-Host 'CHOCOLATEY_API_KEY is not set; skipping push.'
             exit 0
           }
-          Push-Location chocolatey\missive
-          $nupkg = Get-ChildItem *.nupkg | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if (-not $nupkg) { throw 'No .nupkg found. Run smoke test or pack first.' }
-          choco push $nupkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
-          Pop-Location
+          $nupkg = Get-ChildItem -Path 'chocolatey\missive' -Filter '*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $nupkg) { throw 'No .nupkg found after validation.' }
+          # Same feed as choco push; --skip-duplicate avoids hard failure on re-run (FontGet pattern).
+          dotnet nuget push $nupkg.FullName --api-key $env:CHOCOLATEY_API_KEY --source 'https://push.chocolatey.org/' --skip-duplicate
