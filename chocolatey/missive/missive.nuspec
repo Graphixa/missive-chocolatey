@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>missive</id>
+    <version>0.1.0</version>
+    <title>Missive</title>
+    <authors>Community maintainers</authors>
+    <owners>community</owners>
+    <summary>Community-maintained Chocolatey package for Missive (downloads from Missive official Windows URL)</summary>
+    <description>
+This is a **community-maintained** Chocolatey package for **Missive** (software publisher: Missive).
+
+- Downloads the Windows installer at install time from Missive’s official URL (`https://mail.missiveapp.com/download/win`); the package does **not** redistribute Missive binaries.
+- Installs to `C:\Missive` using Missive’s silent installer switches.
+- Creates all-users Start Menu and Public Desktop shortcuts pointing at `C:\Missive\Missive.exe`.
+
+This package is not an official or vendor-maintained release unless Missive explicitly adopts it. The maintainer intends to seek Missive’s cooperation once the package is live and proven; if Missive requests changes or removal, the maintainer will cooperate.
+    </description>
+    <projectUrl>https://missiveapp.com</projectUrl>
+    <packageSourceUrl>https://github.com/OWNER/missive-chocolatey</packageSourceUrl>
+    <docsUrl>https://missiveapp.com</docsUrl>
+    <tags>missive email collaboration community</tags>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
+    <releaseNotes>See repository for release notes.</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

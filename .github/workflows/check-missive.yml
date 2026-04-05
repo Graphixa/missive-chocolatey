@@ -1,0 +1,43 @@
+name: Check Missive installer
+
+on:
+  schedule:
+    - cron: '0 10 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: check-missive
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve installer and update metadata if changed
+        id: resolve
+        shell: pwsh
+        run: |
+          ./scripts/Resolve-MissiveInstaller.ps1
+          $j = Get-Content .resolve-result.json | ConvertFrom-Json
+          $flag = if ($j.Changed) { 'true' } else { 'false' }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "changed=$flag"
+          Write-Host "changed=$flag"
+
+      - name: Commit metadata updates
+        if: steps.resolve.outputs.changed == 'true'
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/package.json config/state.json
+          if (git diff --cached --quiet) {
+            Write-Host "No staged changes; skipping commit."
+            exit 0
+          }
+          git commit -m "chore: update Missive installer metadata"
+          git push
