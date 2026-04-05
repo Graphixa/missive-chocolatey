@@ -8,6 +8,48 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Get-NuspecVersionString {
+    <#
+        Chocolatey needs a unique, mostly-numeric package version. Prefer the vendor file version;
+        fall back to a UTC timestamp when missing or 0.0.0.
+    #>
+    param(
+        [string]$RawVersion
+    )
+    $clean = ($RawVersion -replace '[^\d\.]', '').Trim('.')
+    if ([string]::IsNullOrWhiteSpace($clean) -or $clean -eq '0.0.0') {
+        return (Get-Date).ToUniversalTime().ToString('yyyy.MM.dd.HHmm')
+    }
+    $parts = @($clean.Split('.') | Where-Object { $_ -ne '' })
+    for ($i = 0; $i -lt $parts.Length; $i++) {
+        if ($parts[$i] -match '^\d+$') { continue }
+        $parts[$i] = '0'
+    }
+    if ($parts.Length -gt 4) {
+        $parts = $parts[0..3]
+    }
+    return ($parts -join '.')
+}
+
+function Set-MissiveNuspecVersion {
+    param(
+        [Parameter(Mandatory)][string]$NuspecPath,
+        [Parameter(Mandatory)][string]$VersionString
+    )
+    $raw = Get-Content -LiteralPath $NuspecPath -Raw -Encoding UTF8
+    $ver = $VersionString
+    $evaluator = [System.Text.RegularExpressions.MatchEvaluator]{
+        param($match)
+        $match.Groups[1].Value + $ver + $match.Groups[2].Value
+    }
+    $rx = [regex]'(<version>)[^<]*(</version>)'
+    $updated = $rx.Replace($raw, $evaluator, 1)
+    if ($updated -eq $raw) {
+        throw "Could not update version in $NuspecPath"
+    }
+    Set-Content -LiteralPath $NuspecPath -Value $updated -Encoding UTF8
+}
+
 function Write-JsonAtomic {
     param(
         [Parameter(Mandatory)][string]$Path,
@@ -34,13 +76,15 @@ $statePath = Join-Path $RepoRoot 'config\state.json'
 $package = Get-Content -LiteralPath $packagePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $state = Get-Content -LiteralPath $statePath -Raw -Encoding UTF8 | ConvertFrom-Json
 
-$package.version = $Version
+$nuspecVersion = Get-NuspecVersionString -RawVersion $Version
+
+$package.version = $nuspecVersion
 $package.resolvedInstallerUrl = $ResolvedInstallerUrl
 $package.resolvedInstallerSha256 = $ResolvedInstallerSha256
 $package.detectedFileVersion = $DetectedFileVersion
 $package.lastCheckedUtc = $utc
 
-$state.currentVersion = $Version
+$state.currentVersion = $nuspecVersion
 $state.currentResolvedInstallerUrl = $ResolvedInstallerUrl
 $state.currentResolvedInstallerSha256 = $ResolvedInstallerSha256
 $state.lastCheckedUtc = $utc
@@ -48,4 +92,7 @@ $state.lastCheckedUtc = $utc
 Write-JsonAtomic -Path $packagePath -Object $package
 Write-JsonAtomic -Path $statePath -Object $state
 
-Write-Host "Updated config files for version $Version."
+$nuspecPath = Join-Path $RepoRoot 'chocolatey\missive\missive.nuspec'
+Set-MissiveNuspecVersion -NuspecPath $nuspecPath -VersionString $nuspecVersion
+
+Write-Host "Updated config and nuspec for package version $nuspecVersion (detected: $Version)."

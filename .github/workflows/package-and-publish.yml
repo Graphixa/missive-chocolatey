@@ -2,7 +2,15 @@ name: Package Chocolatey artifact
 
 on:
   workflow_dispatch:
-  workflow_call:
+    inputs:
+      push_to_chocolatey:
+        description: 'Push .nupkg to Chocolatey Community (requires CHOCOLATEY_API_KEY secret)'
+        type: boolean
+        default: false
+      skip_smoke_test:
+        description: 'Skip pack/install/uninstall smoke test (not recommended)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -13,12 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Chocolatey pack
+      - name: Smoke test
+        if: ${{ !inputs.skip_smoke_test }}
+        shell: pwsh
+        run: ./scripts/Test-Package.ps1
+
+      - name: Chocolatey pack (when smoke test skipped)
+        if: ${{ inputs.skip_smoke_test }}
         shell: pwsh
         run: |
           Set-StrictMode -Version Latest
           $ErrorActionPreference = 'Stop'
-          choco --version
           Push-Location chocolatey\missive
           choco pack .\missive.nuspec
           if ($LASTEXITCODE -ne 0) { throw "choco pack failed with $LASTEXITCODE" }
@@ -30,3 +43,20 @@ jobs:
         with:
           name: missive-chocolatey-nupkg
           path: chocolatey/missive/*.nupkg
+
+      - name: Push to Chocolatey Community
+        if: ${{ inputs.push_to_chocolatey }}
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          if (-not $env:CHOCOLATEY_API_KEY) {
+            throw 'CHOCOLATEY_API_KEY secret is not set; cannot push.'
+          }
+          Push-Location chocolatey\missive
+          $nupkg = Get-ChildItem *.nupkg | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $nupkg) { throw 'No .nupkg found. Run smoke test or pack first.' }
+          choco push $nupkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
+          Pop-Location

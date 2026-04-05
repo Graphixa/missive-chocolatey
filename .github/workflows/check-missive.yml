@@ -28,16 +28,40 @@ jobs:
           Add-Content -Path $env:GITHUB_OUTPUT -Value "changed=$flag"
           Write-Host "changed=$flag"
 
-      - name: Commit metadata updates
+      - name: Smoke test package (only when upstream installer changed)
         if: steps.resolve.outputs.changed == 'true'
+        shell: pwsh
+        run: ./scripts/Test-Package.ps1
+
+      - name: Commit metadata and nuspec
+        if: success() && steps.resolve.outputs.changed == 'true'
         shell: pwsh
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add config/package.json config/state.json
+          git add config/package.json config/state.json chocolatey/missive/missive.nuspec
           if (git diff --cached --quiet) {
             Write-Host "No staged changes; skipping commit."
             exit 0
           }
           git commit -m "chore: update Missive installer metadata"
           git push
+
+      - name: Push package to Chocolatey Community
+        if: success() && steps.resolve.outputs.changed == 'true'
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          if (-not $env:CHOCOLATEY_API_KEY) {
+            Write-Host 'CHOCOLATEY_API_KEY is not set; skipping Chocolatey push. Add the secret to enable automatic publish.'
+            exit 0
+          }
+          Push-Location chocolatey\missive
+          choco pack .\missive.nuspec
+          if ($LASTEXITCODE -ne 0) { throw "choco pack failed with $LASTEXITCODE" }
+          $nupkg = Get-ChildItem *.nupkg | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          choco push $nupkg.FullName --source https://push.chocolatey.org/ --api-key $env:CHOCOLATEY_API_KEY
+          Pop-Location

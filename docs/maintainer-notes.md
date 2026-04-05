@@ -29,5 +29,8 @@ Cooperate in good faith: clarify community-maintained status, offer to align wor
 
 ## Automation
 
-* **check-missive** workflow: scheduled + manual; updates config when the upstream installer changes.
-* **package-and-publish** workflow: builds `.nupkg` and uploads an artifact; does **not** push to Chocolatey by default.
+* **CI** (`ci.yml`): on push/PR to `main`, runs `scripts/Test-Package.ps1` on a Windows runner so install/uninstall scripts are exercised every change.
+* **check-missive** workflow: scheduled + manual; resolves Missive’s download URL, hashes the installer, and **only** rewrites `config/package.json`, `config/state.json`, and `chocolatey/missive/missive.nuspec` when the upstream binary changes. It then runs the same smoke test, **commits** those files, and **pushes to Chocolatey Community** only if the repository secret **`CHOCOLATEY_API_KEY`** is configured (otherwise the step is skipped—add the key when you are ready for automated publishes).
+* **package-and-publish** workflow: manual; smoke test (optional skip), uploads `.nupkg` artifact, optional push when you enable the workflow input and have the API key secret.
+
+Missive hosts the installer; you do **not** need GitHub Releases to distribute the application—only the Chocolatey package version in the nuspec (and Community listing) needs to advance when you publish a new package build.

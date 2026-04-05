@@ -17,11 +17,11 @@ This is a **community-maintained** Chocolatey package for **Missive** (software 
 This package is not an official or vendor-maintained release unless Missive explicitly adopts it. The maintainer intends to seek Missive’s cooperation once the package is live and proven; if Missive requests changes or removal, the maintainer will cooperate.
     </description>
     <projectUrl>https://missiveapp.com</projectUrl>
-    <packageSourceUrl>https://github.com/OWNER/missive-chocolatey</packageSourceUrl>
+    <packageSourceUrl>https://github.com/Graphixa/missive-chocolatey</packageSourceUrl>
     <docsUrl>https://missiveapp.com</docsUrl>
     <tags>missive email collaboration community</tags>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
+    <licenseUrl>https://missiveapp.com/terms</licenseUrl>
     <releaseNotes>See repository for release notes.</releaseNotes>
   </metadata>
   <files>
