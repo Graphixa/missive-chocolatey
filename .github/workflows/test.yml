@@ -12,6 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Chocolatey if missing
+        shell: pwsh
+        run: |
+          $chocoExe = Join-Path $env:ProgramData 'chocolatey\bin\choco.exe'
+          if (-not (Test-Path -LiteralPath $chocoExe)) {
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $env:ProgramData 'chocolatey\bin')
+
+      - name: Verify Chocolatey CLI
+        shell: pwsh
+        run: choco --version
+
       - name: Full smoke test (pack, install, verify shortcuts, uninstall)
         shell: pwsh
         run: ./scripts/Test-Package.ps1

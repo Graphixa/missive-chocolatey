@@ -28,8 +28,9 @@ try {
     }
     if ($optionalChecksum) {
         $actual = Get-InstallerSha256 -FilePath $installerPath
-        if ($actual -ne $optionalChecksum) {
-            throw "Installer SHA256 mismatch. Expected $optionalChecksum, got $actual. Refusing to install."
+        $expected = $optionalChecksum.ToLowerInvariant()
+        if ($actual -ne $expected) {
+            throw "Installer SHA256 mismatch. Expected $expected, got $actual. Refusing to install."
         }
         Write-MissiveLog 'SHA256 verification passed.'
     }
@@ -53,6 +54,12 @@ try {
     Write-MissiveLog 'Creating all-users shortcuts.'
     New-MissiveShortcut -TargetPath $ExePath -ShortcutPath $StartMenuShortcut -WorkingDirectory $InstallPath
     New-MissiveShortcut -TargetPath $ExePath -ShortcutPath $PublicDesktopShortcut -WorkingDirectory $InstallPath
+
+    foreach ($p in @($StartMenuShortcut, $PublicDesktopShortcut)) {
+        if (-not (Test-Path -LiteralPath $p)) {
+            throw "Shortcut was not created: $p"
+        }
+    }
 
     Write-MissiveLog 'Missive install completed successfully.'
 }

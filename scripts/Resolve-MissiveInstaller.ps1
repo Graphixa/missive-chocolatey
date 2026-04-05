@@ -63,7 +63,8 @@ try {
         throw 'Download did not produce a file.'
     }
 
-    $sha256 = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash
+    # Normalize so comparisons and JSON state do not flip on case (Get-FileHash is uppercase on Windows).
+    $sha256 = ((Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash).ToLowerInvariant()
 
     $fileVersion = ''
     try {
@@ -81,6 +82,9 @@ try {
     }
 
     $previousSha = $state.currentResolvedInstallerSha256
+    if ($previousSha) {
+        $previousSha = $previousSha.ToLowerInvariant()
+    }
     $changed = ($previousSha -ne $sha256) -or [string]::IsNullOrWhiteSpace($previousSha)
 
     Write-Host "Final URL: $finalUrl"

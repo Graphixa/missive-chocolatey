@@ -22,7 +22,7 @@ function Remove-IfExists {
 function Get-InstallerSha256 {
     param([Parameter(Mandatory)][string]$FilePath)
     $hash = Get-FileHash -LiteralPath $FilePath -Algorithm SHA256 -ErrorAction Stop
-    return $hash.Hash
+    return $hash.Hash.ToLowerInvariant()
 }
 
 function New-MissiveShortcut {

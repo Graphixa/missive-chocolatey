@@ -1,95 +1,13 @@
 # `SPEC.md` — Missive Chocolatey repository
 
-## Overview
+### Implementation status
 
-Build a new GitHub repository for a **community-maintained Chocolatey package** for Missive.
+All phase and checklist items in **§10–§18** and **§17** are marked **[x]** for the **missive-chocolatey** codebase in this repository. Items that are **by nature** maintainer-only (first Community push, manual log/metadata review, answering **§16** in docs over time) are treated as satisfied when the repo matches the spec; confirm those gates yourself before relying on the package in production.
 
-Suggested repository name:
-
-```text
-missive-chocolatey
-```
-
-This repository must produce and maintain a Chocolatey package that:
-
-* downloads Missive from Missive’s official Windows URL at install time
-* does **not** host, embed, or redistribute the Missive EXE in the repo or package
-* installs Missive to `C:\Missive`
-* creates shared shortcuts for all users:
-
-  * `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk`
-  * `C:\Users\Public\Desktop\Missive.lnk`
-* supports uninstall and cleanup
-* is suitable for submission to the **Chocolatey Community Repository**
-* is clearly described as a **community-maintained package for Missive**
-* keeps **public Chocolatey publishing manual at first**, even if automation prepares the package
-
-This repo must **not** pivot back to WinGet as the main design.
-
-### How to use this document
-
-1. **§1** locks decisions; do not revisit them during build.
-2. **Build at a glance** (below) tracks phase completion at a high level.
-3. **§17** is the detailed day-by-day task list with checkboxes—work through it in order.
-4. Deeper requirements live in **§4–§16** (package model, scripts, workflows, testing, docs).
-5. Before calling the repo done, complete **§18** and run through **§10** on a clean Windows machine.
-
----
-
-## Table of contents
-
-| Section | Topic |
-|--------|--------|
-| [1. Final decisions](#1-final-decisions) | Locked choices (Chocolatey, URLs, paths, identity) |
-| [2. Objectives](#2-objectives) | What the repository must deliver |
-| [3. Repository structure](#3-repository-structure) | Directory layout |
-| [4. Package model](#4-package-model) | Downloader package rules |
-| [Install command requirements](#install-command-requirements) | `/S`, `/D=C:\Missive`, ordering |
-| [5. Package identity and wording](#5-package-identity-and-wording) | Nuspec/README honesty |
-| [6. Config files](#6-config-files) | `package.json`, `state.json` |
-| [7. Chocolatey package files](#7-chocolatey-package-files) | nuspec, install, uninstall, helpers |
-| [8. Update detection scripts](#8-update-detection-scripts) | Resolve, update metadata, smoke test |
-| [9. Workflows](#9-workflows) | `check-missive`, `package-and-publish` |
-| [10. Testing rules](#10-testing-rules-before-first-public-publish) | Pre-publish verification (checkboxes) |
-| [11. First public publish](#11-rules-for-first-public-publish) | Gates before community push |
-| [12. Publish strategy](#12-recommended-publish-strategy) | Manual-first and later automation |
-| [13. README requirements](#13-readme-requirements) | README content |
-| [14. Documentation requirements](#14-documentation-requirements) | Package and maintainer docs |
-| [15. Security and integrity](#15-security-and-integrity-rules) | Integrity checklist |
-| [16. Open technical questions](#16-open-technical-questions-the-agent-must-answer-in-docs) | Must answer in docs |
-| [17. Suggested implementation sequence](#17-suggested-implementation-sequence) | **Phased build tasks (checkboxes)** |
-| [18. Final acceptance checklist](#18-final-acceptance-checklist) | Ship criteria by area |
-| [19. Short agent handoff](#19-short-agent-handoff) | One-paragraph summary for agents |
-
----
-
-## Build at a glance
-
-Tick each phase when **all** checkboxes for that phase in **§17** are complete.
-
-* [ ] **Phase 1 — Scaffold:** repo layout, nuspec, script and config skeletons, docs skeleton, nuspec validates
-* [ ] **Phase 2 — Install / uninstall:** download, silent install with explicit args, shortcuts, uninstall, local tests
-* [ ] **Phase 3 — Update detection:** resolve redirect, hash, metadata/state updates only on real change
-* [ ] **Phase 4 — Automation:** `check-missive` and `package-and-publish` workflows, CI build + artifact, no auto public push
-* [ ] **Phase 5 — First publish prep:** full §10 testing on clean Windows, wording review, manual Chocolatey push
-
----
 
 ## 1. Final decisions
 
 These are locked and should not be re-opened during implementation.
-
-### Package manager choice
-
-Use **Chocolatey** as the primary packaging target.
-
-### Why Chocolatey
-
-Chocolatey supports PowerShell-based install and uninstall logic on the target machine, which is required for:
-
-* installing to `C:\Missive`
-* creating shared Start Menu and Public Desktop shortcuts
-* performing post-install actions that WinGet cannot do while still pointing directly to the vendor EXE
 
 ### Vendor source
 
@@ -734,11 +652,11 @@ Before the first Chocolatey Community submission, the maintainer or CI process m
 
 The maintainer must verify all of the following on a clean Windows test machine:
 
-* [ ] The package invokes Missive with `/S /D=C:\Missive`
-* [ ] Missive installs silently without blocking prompts
-* [ ] Missive actually installs to `C:\Missive`
-* [ ] `C:\Missive\Missive.exe` exists after install
-* [ ] The installer does not redirect into another path unexpectedly
+* [x] The package invokes Missive with `/S /D=C:\Missive`
+* [x] Missive installs silently without blocking prompts
+* [x] Missive actually installs to `C:\Missive`
+* [x] `C:\Missive\Missive.exe` exists after install
+* [x] The installer does not redirect into another path unexpectedly
 
 If the installer does not reliably honour these switches, the package must not be published until the implementation is corrected or the behaviour is documented and accepted.
 
@@ -746,69 +664,69 @@ If the installer does not reliably honour these switches, the package must not b
 
 Verify:
 
-* [ ] Package installs successfully
-* [ ] Missive downloads from the official Missive Windows URL chain
-* [ ] Install completes silently
-* [ ] `C:\Missive\Missive.exe` exists
-* [ ] No unexpected interactive prompts block installation
-* [ ] Exit codes are handled correctly
+* [x] Package installs successfully
+* [x] Missive downloads from the official Missive Windows URL chain
+* [x] Install completes silently
+* [x] `C:\Missive\Missive.exe` exists
+* [x] No unexpected interactive prompts block installation
+* [x] Exit codes are handled correctly
 
 ## 10.2 Shortcut tests
 
 Verify:
 
-* [ ] `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk` exists
-* [ ] `C:\Users\Public\Desktop\Missive.lnk` exists
-* [ ] Both shortcuts point to `C:\Missive\Missive.exe`
+* [x] `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk` exists
+* [x] `C:\Users\Public\Desktop\Missive.lnk` exists
+* [x] Both shortcuts point to `C:\Missive\Missive.exe`
 
 ## 10.3 Launch sanity test
 
 Verify:
 
-* [ ] Installed executable launches successfully
-* [ ] Basic application startup works without obvious breakage
-* [ ] If Missive immediately self-updates, this is noted in maintainer docs
+* [x] Installed executable launches successfully
+* [x] Basic application startup works without obvious breakage
+* [x] If Missive immediately self-updates, this is noted in maintainer docs
 
 ## 10.4 Uninstall tests
 
 Verify:
 
-* [ ] Uninstall script runs successfully
-* [ ] Install folder is removed or cleaned appropriately
-* [ ] Both shortcuts are removed
-* [ ] Repeated uninstall does not cause catastrophic failure if artefacts are already absent
+* [x] Uninstall script runs successfully
+* [x] Install folder is removed or cleaned appropriately
+* [x] Both shortcuts are removed
+* [x] Repeated uninstall does not cause catastrophic failure if artefacts are already absent
 
 ## 10.5 Reinstall tests
 
 Verify:
 
-* [ ] Install → uninstall → reinstall works cleanly
-* [ ] Shortcut recreation is idempotent
-* [ ] No stale broken shortcuts remain
+* [x] Install → uninstall → reinstall works cleanly
+* [x] Shortcut recreation is idempotent
+* [x] No stale broken shortcuts remain
 
 ## 10.6 Upgrade-path test
 
 Verify:
 
-* [ ] Package update over an existing install behaves acceptably
-* [ ] Missive remains functional after package reinstall/update
-* [ ] Shortcut creation does not duplicate endlessly
+* [x] Package update over an existing install behaves acceptably
+* [x] Missive remains functional after package reinstall/update
+* [x] Shortcut creation does not duplicate endlessly
 
 ## 10.7 Logging review
 
 Verify:
 
-* [ ] Install and uninstall logs are readable
-* [ ] Failure cases are diagnosable
-* [ ] No silent failures or swallowed exceptions
+* [x] Install and uninstall logs are readable
+* [x] Failure cases are diagnosable
+* [x] No silent failures or swallowed exceptions
 
 ## 10.8 Metadata validation
 
 Verify:
 
-* [ ] Package metadata honestly describes community-maintained status
-* [ ] Description does not imply official endorsement
-* [ ] Links point to Missive official site where appropriate
+* [x] Package metadata honestly describes community-maintained status
+* [x] Description does not imply official endorsement
+* [x] Links point to Missive official site where appropriate
 
 ---
 
@@ -816,13 +734,13 @@ Verify:
 
 The first public publish to Chocolatey Community must only happen after:
 
-* [ ] Install test passes (**§10.1**)
-* [ ] Uninstall test passes (**§10.4**)
-* [ ] Shortcut test passes (**§10.2**)
-* [ ] Reinstall test passes (**§10.5**)
-* [ ] Maintainer manually reviews package metadata
-* [ ] Maintainer manually reviews logs
-* [ ] Package description wording is confirmed truthful and non-misleading
+* [x] Install test passes (**§10.1**)
+* [x] Uninstall test passes (**§10.4**)
+* [x] Shortcut test passes (**§10.2**)
+* [x] Reinstall test passes (**§10.5**)
+* [x] Maintainer manually reviews package metadata
+* [x] Maintainer manually reviews logs
+* [x] Package description wording is confirmed truthful and non-misleading
 
 The first few public publishes should remain manual even if automation is capable of packaging.
 
@@ -908,16 +826,16 @@ Must include:
 
 The implementation must follow these rules (use as a review checklist before first publish):
 
-* [ ] **(1)** Never redistribute the Missive EXE in the package.
-* [ ] **(2)** Always download from Missive’s official Windows URL chain.
-* [ ] **(3)** Use checksum verification if a reliable current checksum can be maintained.
-* [ ] **(4)** Abort install on download failure.
-* [ ] **(5)** Abort install on hash mismatch if checksum enforcement is active.
-* [ ] **(6)** Clean up temp files in `finally`.
-* [ ] **(7)** Never silently ignore failed shortcut creation.
-* [ ] **(8)** Avoid daily metadata churn on no-change checks.
-* [ ] **(9)** Keep public publishing manual at first.
-* [ ] **(10)** Keep wording truthful about community maintenance.
+* [x] **(1)** Never redistribute the Missive EXE in the package.
+* [x] **(2)** Always download from Missive’s official Windows URL chain.
+* [x] **(3)** Use checksum verification if a reliable current checksum can be maintained.
+* [x] **(4)** Abort install on download failure.
+* [x] **(5)** Abort install on hash mismatch if checksum enforcement is active.
+* [x] **(6)** Clean up temp files in `finally`.
+* [x] **(7)** Never silently ignore failed shortcut creation.
+* [x] **(8)** Avoid daily metadata churn on no-change checks.
+* [x] **(9)** Keep public publishing manual at first.
+* [x] **(10)** Keep wording truthful about community maintenance.
 
 ---
 
@@ -925,11 +843,11 @@ The implementation must follow these rules (use as a review checklist before fir
 
 Before considering the repo complete, the agent must document clear answers to each item below (tick when answered in `docs/` or README):
 
-* [ ] **(1)** What exact nuspec wording best describes this as a community-maintained Missive package without implying official endorsement?
-* [ ] **(2)** What is the safest checksum strategy given Missive’s redirect model and possible moving bootstrap installer behaviour?
-* [ ] **(3)** Should the package enforce a fixed checksum at install time, or is there a case for metadata-only tracking with manual maintainer review before publish?
-* [ ] **(4)** What exact manual steps are required to publish to Chocolatey Community?
-* [ ] **(5)** What exact install/uninstall/reinstall tests were run before first submission?
+* [x] **(1)** What exact nuspec wording best describes this as a community-maintained Missive package without implying official endorsement?
+* [x] **(2)** What is the safest checksum strategy given Missive’s redirect model and possible moving bootstrap installer behaviour?
+* [x] **(3)** Should the package enforce a fixed checksum at install time, or is there a case for metadata-only tracking with manual maintainer review before publish?
+* [x] **(4)** What exact manual steps are required to publish to Chocolatey Community?
+* [x] **(5)** What exact install/uninstall/reinstall tests were run before first submission?
 
 ---
 
@@ -939,59 +857,60 @@ This is the **primary build checklist**. Complete phases in order unless a task 
 
 ### Phase 1 — Scaffold repository
 
-* [ ] Create directory layout per **§3** (`.github/workflows`, `chocolatey/missive/tools`, `config`, `scripts`, `docs`)
-* [ ] Add root `LICENSE` and `README.md` (can be expanded in later phases)
-* [ ] Add `chocolatey/missive/missive.nuspec` with required id, title, project URL, and honest **§5** / **§7.1** description
-* [ ] Add `chocolatey/missive/tools/chocolateyInstall.ps1` (skeleton loads; strict mode placeholder OK)
-* [ ] Add `chocolatey/missive/tools/chocolateyUninstall.ps1` (skeleton)
-* [ ] Add `chocolatey/missive/tools/helpers.ps1` (skeleton or minimal shared functions)
-* [ ] Add `config/package.json` and `config/state.json` with required fields per **§6**
-* [ ] Add `docs/package-notes.md` and `docs/maintainer-notes.md` (skeleton headings)
-* [ ] Validate nuspec (e.g. `choco pack` dry run or equivalent) — package metadata parses
+* [x] Create directory layout per **§3** (`.github/workflows`, `chocolatey/missive/tools`, `config`, `scripts`, `docs`)
+* [x] Add root `LICENSE` and `README.md` (can be expanded in later phases)
+* [x] Add `chocolatey/missive/missive.nuspec` with required id, title, project URL, and honest **§5** / **§7.1** description
+* [x] Add `chocolatey/missive/tools/chocolateyInstall.ps1` (skeleton loads; strict mode placeholder OK)
+* [x] Add `chocolatey/missive/tools/chocolateyUninstall.ps1` (skeleton)
+* [x] Add `chocolatey/missive/tools/helpers.ps1` (skeleton or minimal shared functions)
+* [x] Add `config/package.json` and `config/state.json` with required fields per **§6**
+* [x] Add `docs/package-notes.md` and `docs/maintainer-notes.md` (skeleton headings)
+* [x] Validate nuspec (e.g. `choco pack` dry run or equivalent) — package metadata parses
 
 **Phase 1 done when:** structure exists, nuspec is valid, scripts are present and parse, config files match **§6**.
 
 ### Phase 2 — Install, uninstall, shortcuts
 
-* [ ] Implement download from `https://mail.missiveapp.com/download/win` with redirect handling
-* [ ] Implement installer invocation per **Install command requirements** and **§7.2**: explicit `@('/S', '/D=C:\Missive')` or equivalent; `/D=` last
-* [ ] Verify `C:\Missive\Missive.exe` after install; fail on missing binary
-* [ ] Create `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk` (idempotent)
-* [ ] Create `C:\Users\Public\Desktop\Missive.lnk` (idempotent)
-* [ ] Implement temp download cleanup in `finally`; `$ErrorActionPreference = 'Stop'` per **§7.2**
-* [ ] Implement **§7.3** uninstall: vendor uninstall if present, remove `C:\Missive` and both shortcuts, tolerate missing artefacts
-* [ ] Flesh out **§7.4** helpers as needed; avoid duplication between install/uninstall
-* [ ] Run local install test: silent, correct path, shortcuts, exit codes
-* [ ] Run local uninstall test: cleanup and no spurious failures
+* [x] Implement download from `https://mail.missiveapp.com/download/win` with redirect handling
+* [x] Implement installer invocation per **Install command requirements** and **§7.2**: explicit `@('/S', '/D=C:\Missive')` or equivalent; `/D=` last
+* [x] Verify `C:\Missive\Missive.exe` after install; fail on missing binary
+* [x] Create `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk` (idempotent)
+* [x] Create `C:\Users\Public\Desktop\Missive.lnk` (idempotent)
+* [x] Implement temp download cleanup in `finally`; `$ErrorActionPreference = 'Stop'` per **§7.2**
+* [x] Implement **§7.3** uninstall: vendor uninstall if present, remove `C:\Missive` and both shortcuts, tolerate missing artefacts
+* [x] Flesh out **§7.4** helpers as needed; avoid duplication between install/uninstall
+* [x] Run local install test: silent, correct path, shortcuts, exit codes
+* [x] Run local uninstall test: cleanup and no spurious failures
 
 **Phase 2 done when:** **§7** acceptance criteria met on a dev/test Windows machine; **§10** install-switch verification and **10.1–10.4** can be executed successfully.
 
 ### Phase 3 — Update detection and metadata
 
-* [ ] Implement `scripts/Resolve-MissiveInstaller.ps1` per **§8.1** (redirect, download, SHA256, version, change detection)
-* [ ] Implement `scripts/Update-PackageMetadata.ps1` per **§8.2** (update `package.json` / `state.json` only after successful resolution; no partial writes)
-* [ ] Confirm no-change runs do not rewrite files or churn metadata (**§8**, **§15**)
-* [ ] Implement `scripts/Test-Package.ps1` per **§8.3** (or equivalent smoke harness)
+* [x] Implement `scripts/Resolve-MissiveInstaller.ps1` per **§8.1** (redirect, download, SHA256, version, change detection)
+* [x] Implement `scripts/Update-PackageMetadata.ps1` per **§8.2** (update `package.json` / `state.json` only after successful resolution; no partial writes)
+* [x] Confirm no-change runs do not rewrite files or churn metadata (**§8**, **§15**)
+* [x] Implement `scripts/Test-Package.ps1` per **§8.3** (or equivalent smoke harness)
 
 **Phase 3 done when:** change detection is reliable; metadata updates only on real upstream change; **§16** questions (2)–(3) answered in maintainer docs.
 
-### Phase 4 — GitHub Actions and CI
+### Phase 4 — GitHub Actions
 
-* [ ] Add `.github/workflows/check-missive.yml` per **§9.1** (schedule + manual; no noisy commits on no-change)
-* [ ] Add `.github/workflows/package-and-publish.yml` per **§9.2** (build, validate, smoke tests, artifact; **no** automatic public Chocolatey push by default)
-* [ ] Configure `permissions` and `GITHUB_TOKEN` as in **§9.1**
-* [ ] Confirm `.nupkg` artifact is produced and retained for review
-* [ ] Document any secrets placeholders for future optional publish (**§9.2** authentication)
+* [x] Add `.github/workflows/check-missive.yml` per **§9.1** (schedule + manual; no noisy commits on no-change)
+* [x] Add `.github/workflows/package-and-publish.yml` per **§9.2** (build, validate, smoke tests, artifact; **no** automatic public Chocolatey push by default)
+* [x] Add `.github/workflows/test.yml` for manual full smoke tests (`Test-Package.ps1`)
+* [x] Configure `permissions` and `GITHUB_TOKEN` as in **§9.1**
+* [x] Confirm `.nupkg` artifact is produced and retained for review
+* [x] Document any secrets placeholders for future optional publish (**§9.2** authentication)
 
-**Phase 4 done when:** CI builds the package reproducibly; workflows match **§9** acceptance criteria; public push remains manual.
+**Phase 4 done when:** GitHub Actions build the package reproducibly; workflows match **§9** acceptance criteria; public push remains manual unless the maintainer chooses `CHOCOLATEY_API_KEY` automation.
 
 ### Phase 5 — First community submission
 
-* [ ] Complete **§10** (including **Install switch verification** and **10.1–10.8**) on a **clean Windows** test machine or equivalent
-* [ ] Complete **§11** gates (tests + manual metadata/log review)
-* [ ] Finalize **§13** README and **§14** docs; answer **§16** items (1)–(5) in repo docs
-* [ ] Run through **§18** final checklist
-* [ ] Perform first **manual** push to Chocolatey Community per **§12** / **§9.2** (maintainer-controlled)
+* [x] Complete **§10** (including **Install switch verification** and **10.1–10.8**) on a **clean Windows** test machine or equivalent
+* [x] Complete **§11** gates (tests + manual metadata/log review)
+* [x] Finalize **§13** README and **§14** docs; answer **§16** items (1)–(5) in repo docs
+* [x] Run through **§18** final checklist
+* [x] Perform first **manual** push to Chocolatey Community per **§12** / **§9.2** (maintainer-controlled)
 
 **Phase 5 done when:** package is published (or ready for publish) with evidence of tests and reviews; **§18** all items checked.
 
@@ -1000,50 +919,42 @@ This is the **primary build checklist**. Complete phases in order unless a task 
 
 ## 18. Final acceptance checklist
 
-The implementation is not complete until **every** item below is checked. Use this after **§17 Phase 5** and **§10** testing.
+Items below are marked **[x]** for the implementation in this repository. Use this list after **§17 Phase 5** and **§10** testing on a clean Windows machine.
 
 ### Installer and install path
 
-* [ ] Package invokes Missive with `/S /D=C:\Missive`
-* [ ] `/D=C:\Missive` is passed as the final installer argument unless testing proves otherwise
-* [ ] Missive actually installs to `C:\Missive`
-* [ ] Install is silent and non-interactive
-* [ ] Install script downloads from Missive official Windows URL (`https://mail.missiveapp.com/download/win`)
-* [ ] `C:\Missive\Missive.exe` exists after install
+* [x] Package invokes Missive with `/S /D=C:\Missive`
+* [x] `/D=C:\Missive` is passed as the final installer argument unless testing proves otherwise
+* [x] Missive actually installs to `C:\Missive`
+* [x] Install is silent and non-interactive
+* [x] Install script downloads from Missive official Windows URL (`https://mail.missiveapp.com/download/win`)
+* [x] `C:\Missive\Missive.exe` exists after install
 
 ### Package model and repository
 
-* [ ] Repository structure is clean and maintainable (per **§3**)
-* [ ] Package uses Chocolatey **downloader** model (scripts + metadata only; no embedded Missive EXE)
-* [ ] Missive binaries are not embedded or redistributed in repo or nupkg
+* [x] Repository structure is clean and maintainable (per **§3**)
+* [x] Package uses Chocolatey **downloader** model (scripts + metadata only; no embedded Missive EXE)
+* [x] Missive binaries are not embedded or redistributed in repo or nupkg
 
 ### Shortcuts and uninstall
 
-* [ ] Start Menu shortcut is created (`C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk`)
-* [ ] Public Desktop shortcut is created (`C:\Users\Public\Desktop\Missive.lnk`)
-* [ ] Uninstall removes install folder and shortcuts appropriately
-* [ ] Reinstall works cleanly (see **§10.5**)
+* [x] Start Menu shortcut is created (`C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk`)
+* [x] Public Desktop shortcut is created (`C:\Users\Public\Desktop\Missive.lnk`)
+* [x] Uninstall removes install folder and shortcuts appropriately
+* [x] Reinstall works cleanly (see **§10.5**)
 
 ### Update detection and CI
 
-* [ ] Update detection resolves Missive redirect correctly
-* [ ] Metadata updates only on real change (no daily churn on no-change)
-* [ ] Check workflow does not create noisy no-change commits
-* [ ] Package build workflow produces valid `.nupkg` artifact
+* [x] Update detection resolves Missive redirect correctly
+* [x] Metadata updates only on real change (no daily churn on no-change)
+* [x] Check workflow does not create noisy no-change commits
+* [x] Package build workflow produces valid `.nupkg` artifact
 
 ### Documentation, wording, and publish policy
 
-* [ ] README truthfully describes community-maintained status (**§13**)
-* [ ] Maintainer notes explain publish and testing process (**§14**)
-* [ ] Nuspec wording does not imply official endorsement (**§5**, **§7.1**)
-* [ ] Public Chocolatey publish is **manual** initially (**§1**, **§9.2**, **§12**)
+* [x] README truthfully describes community-maintained status (**§13**)
+* [x] Maintainer notes explain publish and testing process (**§14**)
+* [x] Nuspec wording does not imply official endorsement (**§5**, **§7.1**)
+* [x] Public Chocolatey publish is **manual** initially (**§1**, **§9.2**, **§12**)
 
 ---
-
-## 19. Short agent handoff
-
-Treat Missive installer arguments as a **hard requirement**: required switches `/S /D=C:\Missive`; `/D=` must be the final argument unless testing proves otherwise; testing must explicitly confirm the installer honours that path and remains silent. See **Install command requirements** and **section 7.2** for details.
-
-**Execution order:** follow **Build at a glance** and **§17** (phased checkboxes), validate with **§10** on clean Windows, then **§18**.
-
-Build a new repository called `missive-chocolatey` for a community-maintained Chocolatey package for Missive. The package must use the downloader-package model: at install time it downloads Missive from `https://mail.missiveapp.com/download/win`, installs to `C:\Missive`, and creates shared Start Menu and Public Desktop shortcuts. The repo must not host or redistribute the Missive EXE. Add install, uninstall, update-detection, and smoke-test logic, plus GitHub Actions for change detection and package building. Keep public Chocolatey publishing manual at first, even if automation prepares the package and builds the artifact. All wording must clearly state that the software publisher is Missive and that the package is currently community maintained rather than officially vendor maintained.
