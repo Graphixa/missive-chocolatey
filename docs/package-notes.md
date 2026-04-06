@@ -6,12 +6,12 @@ This Chocolatey package is a **downloader package**: the `.nupkg` contains only 
 
 ## Architecture
 
-* **Stable:** install/uninstall behaviour, install path (`C:\Missive`), shortcut targets, silent installer arguments (`/S` and `/D=C:\Missive` with `/D=` last).
+* **Stable:** install/uninstall behaviour, install path (`%SystemDrive%\Missive` — same as `C:\Missive` when C: is the system drive), shortcut targets via `%ProgramData%` / `%Public%`, silent installer arguments (`/S` and `/D=<install path>` with `/D=` last).
 * **Dynamic:** upstream installer URL after redirects, file hash, and detected version—tracked in `config/package.json` and `config/state.json` for automation and maintainer review.
 
 ## Install path and shortcuts
 
-* Install directory: `C:\Missive` (explicit installer override, not the default location).
+* Install directory: `%SystemDrive%\Missive` (explicit installer override, not the default location).
 * Shortcuts (all users):
 
   * `C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk`

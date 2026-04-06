@@ -2,7 +2,7 @@
 
 Community-maintained [Chocolatey](https://chocolatey.org/) package source for [**Missive**](https://missiveapp.com/) (software publisher: Missive).
 
-This repository **does not** host or redistribute the Missive Windows installer. At `choco install` time, the package downloads Missive from Missive’s official Windows download URL (`https://mail.missiveapp.com/download/win`), installs to `C:\Missive`, and creates all-users Start Menu and Public Desktop shortcuts.
+This repository **does not** host or redistribute the Missive Windows installer. At `choco install` time, the package downloads Missive from Missive’s official Windows download URL (`https://mail.missiveapp.com/download/win`), installs to **`%SystemDrive%\Missive`** (the same as `C:\Missive` on typical single-drive setups), and creates all-users Start Menu and Public Desktop shortcuts.
 
 Chocolatey is used so the package can run PowerShell on the target machine for a fixed install path and shared shortcuts—behaviour that is awkward to express in WinGet alone.
 

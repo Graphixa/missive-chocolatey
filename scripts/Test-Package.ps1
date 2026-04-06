@@ -45,13 +45,14 @@ try {
         throw "choco install failed with exit code $LASTEXITCODE"
     }
 
-    $exe = 'C:\Missive\Missive.exe'
+    $installRoot = Join-Path $env:SystemDrive 'Missive'
+    $exe = Join-Path $installRoot 'Missive.exe'
     if (-not (Test-Path -LiteralPath $exe)) {
         throw "Missing $exe after install."
     }
 
-    $sm = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk'
-    $pd = 'C:\Users\Public\Desktop\Missive.lnk'
+    $sm = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Missive.lnk'
+    $pd = Join-Path $env:Public 'Desktop\Missive.lnk'
     foreach ($p in @($sm, $pd)) {
         if (-not (Test-Path -LiteralPath $p)) {
             throw "Missing shortcut: $p"
@@ -59,12 +60,22 @@ try {
     }
 
     Write-Host 'Shortcuts and executable present. Running uninstall...'
-    & choco uninstall missive -y
+    & choco uninstall missive -y --force
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning "choco uninstall exit code $LASTEXITCODE (continuing verification)"
+        throw "choco uninstall failed with exit code $LASTEXITCODE"
     }
 
-    Write-Host 'Smoke test completed successfully.'
+    foreach ($p in @($sm, $pd)) {
+        if (Test-Path -LiteralPath $p) {
+            throw "Shortcut still present after uninstall (expected removed): $p"
+        }
+    }
+
+    if (Test-Path -LiteralPath (Join-Path $installRoot 'Missive.exe')) {
+        throw "Missive.exe still present under $installRoot after uninstall."
+    }
+
+    Write-Host 'Uninstall completed; shortcuts and app binary are gone. Smoke test completed successfully.'
 }
 finally {
     Pop-Location

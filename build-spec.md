@@ -172,6 +172,10 @@ The implementation must explicitly use the Missive silent install command with:
 
 and must not rely on default install location behaviour.
 
+### Implementation note (system drive)
+
+The implementation uses **`Join-Path $env:SystemDrive 'Missive'`** so the installer receives `/D=D:\Missive` when Windows lives on D:, for example. Shortcuts use **`$env:ProgramData`** and **`$env:Public`** so they follow the correct volume. Examples elsewhere in this document often show **`C:\Missive`** for clarity on typical PCs.
+
 ---
 
 ## 5. Package identity and wording

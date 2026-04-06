@@ -1,13 +1,14 @@
 $ErrorActionPreference = 'Stop'
 
 $MissiveDownloadUrl = 'https://mail.missiveapp.com/download/win'
-$InstallPath = 'C:\Missive'
-$ExePath = Join-Path $InstallPath 'Missive.exe'
-$StartMenuShortcut = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk'
-$PublicDesktopShortcut = 'C:\Users\Public\Desktop\Missive.lnk'
 
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 . (Join-Path $toolsDir 'helpers.ps1')
+
+$InstallPath = Get-MissiveInstallRoot
+$ExePath = Join-Path $InstallPath 'Missive.exe'
+$StartMenuShortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Missive.lnk'
+$PublicDesktopShortcut = Join-Path $env:Public 'Desktop\Missive.lnk'
 
 $tempDir = $null
 $installerPath = $null

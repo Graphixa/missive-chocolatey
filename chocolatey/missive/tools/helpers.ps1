@@ -1,5 +1,12 @@
 # Shared helpers for Missive Chocolatey package (dot-sourced by install/uninstall scripts).
 
+function Get-MissiveInstallRoot {
+    <#
+        Uses the Windows system drive (e.g. C: or D:) so installs work when Windows is not on C:.
+    #>
+    return (Join-Path $env:SystemDrive 'Missive')
+}
+
 function Write-MissiveLog {
     param([string]$Message)
     Write-Host "[missive-chocolatey] $Message"
@@ -44,8 +51,9 @@ function New-MissiveShortcut {
 
 function Get-MissiveUninstallEntry {
     <#
-        Finds an uninstall registry entry for Missive under C:\Missive or display name.
+        Finds an uninstall registry entry for Missive under the Missive install root or display name.
     #>
+    $missiveRoot = Get-MissiveInstallRoot
     $roots = @(
         'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
         'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
@@ -57,7 +65,7 @@ function Get-MissiveUninstallEntry {
             if (-not $key) { continue }
             $loc = $key.InstallLocation
             $name = $key.DisplayName
-            if (($loc -and $loc.TrimStart().StartsWith('C:\Missive', [System.StringComparison]::OrdinalIgnoreCase)) -or
+            if (($loc -and $loc.Trim().StartsWith($missiveRoot, [System.StringComparison]::OrdinalIgnoreCase)) -or
                 ($name -and $name -like '*Missive*')) {
                 return $key
             }

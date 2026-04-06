@@ -1,11 +1,11 @@
 $ErrorActionPreference = 'Stop'
 
-$InstallPath = 'C:\Missive'
-$StartMenuShortcut = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Missive.lnk'
-$PublicDesktopShortcut = 'C:\Users\Public\Desktop\Missive.lnk'
-
 $toolsDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 . (Join-Path $toolsDir 'helpers.ps1')
+
+$InstallPath = Get-MissiveInstallRoot
+$StartMenuShortcut = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Missive.lnk'
+$PublicDesktopShortcut = Join-Path $env:Public 'Desktop\Missive.lnk'
 
 Write-MissiveLog 'Starting Missive package uninstall.'
 
@@ -46,7 +46,7 @@ if ($entry) {
 
 $uninstallExe = Join-Path $InstallPath 'Uninstall.exe'
 if (Test-Path -LiteralPath $uninstallExe) {
-    Write-MissiveLog 'Running C:\Missive\Uninstall.exe /S if present.'
+    Write-MissiveLog "Running Uninstall.exe under $InstallPath if present."
     try {
         $p = Start-Process -FilePath $uninstallExe -ArgumentList '/S' -Wait -PassThru -ErrorAction SilentlyContinue
         if ($p -and $p.ExitCode -ne 0) {
