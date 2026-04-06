@@ -1,8 +1,8 @@
 {
-  "version": "",
+  "version": "11.12.4",
   "missiveRedirectUrl": "https://mail.missiveapp.com/download/win",
-  "resolvedInstallerUrl": "",
-  "resolvedInstallerSha256": "",
-  "detectedFileVersion": "",
-  "lastCheckedUtc": ""
+  "resolvedInstallerUrl": "https://downloads.missiveapp.com/11.12.4/Missive%20Setup%2011.12.4.exe",
+  "resolvedInstallerSha256": "07ea01d10ccc6a4f727ac4847c0d4895d79f1494cc4aa7beb073896c69823175",
+  "detectedFileVersion": "11.12.4",
+  "lastCheckedUtc": "2026-04-06T01:21:49.3080885Z"
 }

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>missive</id>
-    <version>0.1.0</version>
+    <version>11.12.4</version>
     <title>Missive</title>
     <authors>Community maintainers</authors>
     <owners>community</owners>
@@ -28,3 +28,4 @@ This package is not an official or vendor-maintained release unless Missive expl
     <file src="tools\**" target="tools" />
   </files>
 </package>
+
