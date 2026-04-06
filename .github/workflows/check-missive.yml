@@ -2,7 +2,8 @@ name: Check Missive installer
 
 on:
   schedule:
-    - cron: '0 10 * * 1'
+    # Daily 10:00 UTC — check upstream Missive installer; GitHub Actions cron uses UTC.
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 permissions:
