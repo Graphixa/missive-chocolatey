@@ -22,20 +22,14 @@ try {
 
     $chocoPkgName = if ($env:ChocolateyPackageName) { $env:ChocolateyPackageName } else { 'missive' }
 
-    $sha256File = Join-Path $toolsDir 'resolved-installer.sha256'
-    if (-not (Test-Path -LiteralPath $sha256File)) {
-        throw 'Package is missing tools/resolved-installer.sha256. Rebuild the package from an updated repository.'
-    }
-    $expectedSha = ([System.IO.File]::ReadAllText($sha256File).Trim() -replace '\s', '').ToLowerInvariant()
-    if ($expectedSha -notmatch '^[a-f0-9]{64}$') {
-        throw "Invalid SHA256 in resolved-installer.sha256: $expectedSha"
-    }
-
+    # Must use a quoted literal SHA256 here: Chocolatey community automated validation detects
+    # Get-ChocolateyWebFile -Checksum that way. scripts/Update-PackageMetadata.ps1 keeps this in sync
+    # with tools/resolved-installer.sha256 when the upstream installer changes.
     Get-ChocolateyWebFile `
         -PackageName $chocoPkgName `
         -FileFullPath $installerPath `
         -Url $MissiveDownloadUrl `
-        -Checksum $expectedSha `
+        -Checksum '07ea01d10ccc6a4f727ac4847c0d4895d79f1494cc4aa7beb073896c69823175' `
         -ChecksumType sha256
 
     $arguments = @(

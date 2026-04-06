@@ -31,6 +31,28 @@ function Get-NuspecVersionString {
     return ($parts -join '.')
 }
 
+function Set-ChocolateyInstallSha256Literal {
+    <#
+        Replaces the quoted SHA256 in Get-ChocolateyWebFile -Checksum '...' so community validation
+        and the resolved-installer.sha256 file stay aligned.
+    #>
+    param(
+        [Parameter(Mandatory)][string]$InstallScriptPath,
+        [Parameter(Mandatory)][string]$Sha256LowerHex
+    )
+    $raw = Get-Content -LiteralPath $InstallScriptPath -Raw -Encoding UTF8
+    $rx = [regex]"(?m)([\t ]*-Checksum\s+')([a-f0-9]{64})(')"
+    $evaluator = [System.Text.RegularExpressions.MatchEvaluator]{
+        param($match)
+        $match.Groups[1].Value + $Sha256LowerHex + $match.Groups[3].Value
+    }
+    $updated = $rx.Replace($raw, $evaluator, 1)
+    if ($updated -eq $raw) {
+        throw "Could not replace -Checksum literal in $InstallScriptPath"
+    }
+    Set-Content -LiteralPath $InstallScriptPath -Value $updated -Encoding UTF8
+}
+
 function Set-MissiveNuspecVersion {
     param(
         [Parameter(Mandatory)][string]$NuspecPath,
@@ -95,8 +117,12 @@ Write-JsonAtomic -Path $statePath -Object $state
 $nuspecPath = Join-Path $RepoRoot 'chocolatey\missive\missive.nuspec'
 Set-MissiveNuspecVersion -NuspecPath $nuspecPath -VersionString $nuspecVersion
 
-$sha256Path = Join-Path $RepoRoot 'chocolatey\missive\tools\resolved-installer.sha256'
 $hashNormalized = $ResolvedInstallerSha256.Trim().ToLowerInvariant()
+
+$sha256Path = Join-Path $RepoRoot 'chocolatey\missive\tools\resolved-installer.sha256'
 [System.IO.File]::WriteAllText($sha256Path, $hashNormalized)
 
-Write-Host "Updated config, nuspec, and tools/resolved-installer.sha256 for package version $nuspecVersion (detected: $Version)."
+$installScriptPath = Join-Path $RepoRoot 'chocolatey\missive\tools\chocolateyInstall.ps1'
+Set-ChocolateyInstallSha256Literal -InstallScriptPath $installScriptPath -Sha256LowerHex $hashNormalized
+
+Write-Host "Updated config, nuspec, tools/resolved-installer.sha256, and chocolateyInstall.ps1 checksum literal for package version $nuspecVersion (detected: $Version)."
