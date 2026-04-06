@@ -49,6 +49,20 @@ function New-MissiveShortcut {
     $shortcut.Save()
 }
 
+function Get-MissiveVendorUninstallerPath {
+    <#
+        Missive ships the uninstall bootstrap as 'Uninstall Missive.exe' (with a space), not only Uninstall.exe.
+    #>
+    param([Parameter(Mandatory)][string]$InstallPath)
+    foreach ($name in @('Uninstall Missive.exe', 'Uninstall.exe')) {
+        $full = Join-Path $InstallPath $name
+        if (Test-Path -LiteralPath $full) {
+            return $full
+        }
+    }
+    return $null
+}
+
 function Get-MissiveUninstallEntry {
     <#
         Finds an uninstall registry entry for Missive under the Missive install root or display name.

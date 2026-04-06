@@ -44,16 +44,16 @@ if ($entry) {
     }
 }
 
-$uninstallExe = Join-Path $InstallPath 'Uninstall.exe'
-if (Test-Path -LiteralPath $uninstallExe) {
-    Write-MissiveLog "Running Uninstall.exe under $InstallPath if present."
+$vendorUninstall = Get-MissiveVendorUninstallerPath -InstallPath $InstallPath
+if ($vendorUninstall) {
+    Write-MissiveLog "Running vendor uninstaller: $vendorUninstall"
     try {
-        $p = Start-Process -FilePath $uninstallExe -ArgumentList '/S' -Wait -PassThru -ErrorAction SilentlyContinue
+        $p = Start-Process -FilePath $vendorUninstall -ArgumentList '/S' -Wait -PassThru -ErrorAction SilentlyContinue
         if ($p -and $p.ExitCode -ne 0) {
-            Write-MissiveLog "Uninstall.exe exit code: $($p.ExitCode)"
+            Write-MissiveLog "Vendor uninstaller exit code: $($p.ExitCode)"
         }
     } catch {
-        Write-MissiveLog "Uninstall.exe: $($_.Exception.Message)"
+        Write-MissiveLog "Vendor uninstaller: $($_.Exception.Message)"
     }
 }
 
