@@ -4,27 +4,33 @@
     <id>missive</id>
     <version>11.12.4</version>
     <title>Missive</title>
-    <authors>Community maintainers</authors>
-    <owners>community</owners>
-    <summary>Community-maintained Chocolatey package for Missive (downloads from Missive official Windows URL)</summary>
-    <description>
-This is a **community-maintained** Chocolatey package for **Missive** (software publisher: Missive).
+    <authors>Missive</authors>
+    <owners>Graphixa</owners>
+    <summary>Team email and chat from Missive. This package installs Missive using the official Windows installer downloaded from Missive at install time.</summary>
+    <description><![CDATA[
+[Missive](https://missiveapp.com) is team email and chat for productive teams—the application, name, and branding are from **Missive** (see [Terms](https://missiveapp.com/terms)).
+
+## This Chocolatey package
 
 - Downloads the Windows installer at install time from Missive’s official URL (`https://mail.missiveapp.com/download/win`); the package does **not** redistribute Missive binaries.
-- Installs to `%SystemDrive%\Missive` (typically `C:\Missive` when C: is the Windows boot drive) using Missive’s silent installer switches.
-- Creates all-users Start Menu and Public Desktop shortcuts pointing at `Missive.exe` under that folder.
+- Installs to `%SystemDrive%\Missive` (typically `C:\Missive` when the system drive is `C:`) using Missive’s silent installer switches.
+- Creates all-users Start Menu and Public Desktop shortcuts to `Missive.exe` under that folder.
 
-This package is not an official or vendor-maintained release unless Missive explicitly adopts it. The maintainer intends to seek Missive’s cooperation once the package is live and proven; if Missive requests changes or removal, the maintainer will cooperate.
-    </description>
+## Notes
+
+- This is a **community-maintained** Chocolatey package. It is not published by Missive unless they choose to adopt it. If Missive requests changes or removal, the package maintainer will cooperate.
+- Package source: [missive-chocolatey on GitHub](https://github.com/Graphixa/missive-chocolatey).
+]]></description>
+    <copyright>Copyright Missive</copyright>
     <projectUrl>https://missiveapp.com</projectUrl>
     <packageSourceUrl>https://github.com/Graphixa/missive-chocolatey</packageSourceUrl>
-    <docsUrl>https://missiveapp.com</docsUrl>
-    <tags>missive email collaboration community</tags>
+    <docsUrl>https://missiveapp.com/help</docsUrl>
+    <licenseUrl>https://missiveapp.com/terms</licenseUrl>
+    <tags>missive email collaboration team-chat community</tags>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <releaseNotes>See repository README.</releaseNotes>
+    <releaseNotes>https://missiveapp.com/changelog</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
   </files>
 </package>
-
