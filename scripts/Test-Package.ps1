@@ -11,6 +11,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Write-SmokeTestLog {
+    param([string]$Message)
+    Write-Host "[smoke-test] $Message"
+}
+
 if ($PSVersionTable.PSVersion.Major -lt 5) {
     throw 'PowerShell 5.1 or later is required.'
 }
@@ -46,20 +51,31 @@ try {
     }
 
     $installRoot = Join-Path $env:SystemDrive 'Missive'
+    Write-SmokeTestLog "Install root: $installRoot"
+    if (-not (Test-Path -LiteralPath $installRoot)) {
+        throw "Install directory missing after install (expected $installRoot)."
+    }
+
     $exe = Join-Path $installRoot 'Missive.exe'
     if (-not (Test-Path -LiteralPath $exe)) {
         throw "Missing $exe after install."
     }
+    Write-SmokeTestLog "OK: $exe"
 
     $sm = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\Missive.lnk'
     $pd = Join-Path $env:Public 'Desktop\Missive.lnk'
-    foreach ($p in @($sm, $pd)) {
-        if (-not (Test-Path -LiteralPath $p)) {
-            throw "Missing shortcut: $p"
+    $shortcutChecks = @(
+        @{ Path = $sm; Label = 'Start Menu' }
+        @{ Path = $pd; Label = 'Public Desktop' }
+    )
+    foreach ($sc in $shortcutChecks) {
+        if (-not (Test-Path -LiteralPath $sc.Path)) {
+            throw "Missing shortcut ($($sc.Label)): $($sc.Path)"
         }
+        Write-SmokeTestLog "OK: $($sc.Label) - $($sc.Path)"
     }
 
-    Write-Host 'Shortcuts and executable present. Running uninstall...'
+    Write-SmokeTestLog 'Running uninstall...'
     & choco uninstall missive -y --force
     if ($LASTEXITCODE -ne 0) {
         throw "choco uninstall failed with exit code $LASTEXITCODE"
@@ -75,7 +91,8 @@ try {
         throw "Missive.exe still present under $installRoot after uninstall."
     }
 
-    Write-Host 'Uninstall completed; shortcuts and app binary are gone. Smoke test completed successfully.'
+    Write-SmokeTestLog 'OK: shortcuts and Missive.exe removed after uninstall.'
+    Write-Host 'Smoke test completed successfully.'
 }
 finally {
     Pop-Location
