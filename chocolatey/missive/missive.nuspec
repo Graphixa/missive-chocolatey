@@ -21,8 +21,7 @@ This package is not an official or vendor-maintained release unless Missive expl
     <docsUrl>https://missiveapp.com</docsUrl>
     <tags>missive email collaboration community</tags>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
-    <releaseNotes>See repository for release notes.</releaseNotes>
+    <releaseNotes>See repository README.</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />

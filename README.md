@@ -1,27 +1,31 @@
-# missive-chocolatey
+# Missive — Chocolatey community package
 
-Community-maintained [Chocolatey](https://chocolatey.org/) package that helps you install [**Missive**](https://missiveapp.com/) on Windows with a fixed install location and shared shortcuts.
+**What this package does**
 
-## Disclaimer
-
-* **Missive** (the product) is owned and operated by **Missive**. Trademarks, copyrights, and all rights in the software belong to the Missive team. This GitHub repository is a **community** packaging effort—it is **not** an official Missive or Chocolatey product unless Missive says so.
-* This repo contains **only** Chocolatey metadata and PowerShell scripts. It does **not** ship the Missive app in the repository; when someone runs `choco install`, the installer is **downloaded from Missive** at install time.
-
-## Official Missive
-
-* Website: [https://missiveapp.com](https://missiveapp.com)
-* Terms of service: [https://missiveapp.com/terms](https://missiveapp.com/terms)
-
-## What this package does
-
-* Downloads the Windows installer from Missive’s official URL (`https://mail.missiveapp.com/download/win`).
-* Installs under **`%SystemDrive%\Missive`** (on most PCs that is `C:\Missive`).
+* Downloads the Windows installer from Missive’s URL (`https://mail.missiveapp.com/download/win`) when you run `choco install`.
+* Installs under **`%SystemDrive%\Missive`** (on most PCs that is `C:\Missive`) so the app is available for all users on the machine.
 * Adds Start Menu and Public Desktop shortcuts.
 
-## License (this repository)
+This repo is **only** Chocolatey metadata and PowerShell scripts. It does **not** include the Missive app; your PC fetches the installer from Missive at install time.
 
-The **packaging scripts and files in this repo** are under the [MIT License](LICENSE). That license applies to **this repository only**, not to Missive’s application.
+---
 
-## Development (short)
+**About Missive**
 
-Build the `.nupkg` from `chocolatey/missive` with `choco pack .\missive.nuspec`. Optional smoke test: `pwsh ./scripts/Test-Package.ps1` on Windows with Chocolatey installed. GitHub Actions workflows under `.github/workflows/` run tests and optional packaging.
+[Missive](https://missiveapp.com) is team email and chat for productive teams—the product name, branding, and application are theirs. This repository is an independent community effort to package Missive for [Chocolatey](https://chocolatey.org/); it is not run by Missive unless they choose to adopt it.
+
+* Website: [missiveapp.com](https://missiveapp.com)  
+* Terms: [missiveapp.com/terms](https://missiveapp.com/terms)
+
+---
+
+**Disclaimer**
+
+* Missive’s software, trademarks, and related rights belong to the Missive team. This project does not claim ownership of Missive.
+* This package is **community-maintained** and may lag behind or differ from Missive’s own distribution choices.
+
+---
+
+**Development**
+
+From `chocolatey/missive`: `choco pack .\missive.nuspec`. Optional smoke test on Windows: `pwsh ./scripts/Test-Package.ps1` (Chocolatey required). CI lives under `.github/workflows/`.
