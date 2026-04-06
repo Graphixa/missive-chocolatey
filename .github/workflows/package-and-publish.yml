@@ -5,7 +5,7 @@
 #   2. Pack + full local smoke test (install / verify / uninstall) — REQUIRED before any push
 #   3. Validate .nupkg contains required tools/*.ps1 entries
 #   4. Upload artifact
-#   5. Push only after the above succeed (dotnet nuget push --skip-duplicate)
+#   5. Push only after the above succeed (dotnet nuget push; optional --skip-duplicate for CI reruns)
 #
 # Ref: https://docs.chocolatey.org/en-us/create/commands/push/
 
@@ -26,6 +26,10 @@ on:
         description: 'Pull latest from origin first (leave off for normal manual runs)'
         type: boolean
         default: false
+      skip_duplicate_on_push:
+        description: 'Pass --skip-duplicate on push (avoids error if this version was already pushed). Set false to re-upload the SAME version during moderation review.'
+        type: boolean
+        default: true
 
   workflow_call:
     inputs:
@@ -40,6 +44,10 @@ on:
       sync_from_remote:
         type: boolean
         description: 'Pull latest commit from origin (required after check-missive commit)'
+        default: true
+      skip_duplicate_on_push:
+        type: boolean
+        description: 'Pass --skip-duplicate when pushing (caller defaults true)'
         default: true
 
 permissions:
@@ -122,6 +130,7 @@ jobs:
         if: ${{ success() && inputs.push_to_chocolatey }}
         env:
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+          SKIP_DUP: ${{ inputs.skip_duplicate_on_push }}
         shell: pwsh
         run: |
           Set-StrictMode -Version Latest
@@ -132,5 +141,14 @@ jobs:
           }
           $nupkg = Get-ChildItem -Path 'chocolatey\missive' -Filter '*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $nupkg) { throw 'No .nupkg found after validation.' }
-          # Same feed as choco push; --skip-duplicate avoids hard failure on re-run (FontGet pattern).
-          dotnet nuget push $nupkg.FullName --api-key $env:CHOCOLATEY_API_KEY --source 'https://push.chocolatey.org/' --skip-duplicate
+          # --skip-duplicate: safe for CI reruns after a successful push. For moderation resubmit of the
+          # same version, run workflow with skip_duplicate_on_push=false so the fixed .nupkg is uploaded.
+          # Ref: https://docs.chocolatey.org/en-us/community-repository/moderation/
+          $args = @('nuget', 'push', $nupkg.FullName, '--api-key', $env:CHOCOLATEY_API_KEY, '--source', 'https://push.chocolatey.org/')
+          if ($env:SKIP_DUP -eq 'true') {
+            $args += '--skip-duplicate'
+            Write-Host 'Push: using --skip-duplicate (set skip_duplicate_on_push=false to replace a version in moderation).'
+          } else {
+            Write-Host 'Push: not using --skip-duplicate (full upload; use for moderation resubmit of same version).'
+          }
+          & dotnet @args

@@ -21,20 +21,22 @@ try {
     $installerPath = Join-Path $tempDir 'MissiveSetup.exe'
 
     $chocoPkgName = if ($env:ChocolateyPackageName) { $env:ChocolateyPackageName } else { 'missive' }
-    Get-ChocolateyWebFile -PackageName $chocoPkgName -FileFullPath $installerPath -Url $MissiveDownloadUrl
 
-    $optionalChecksum = $null
-    if ($env:MISSIVE_INSTALLER_SHA256) {
-        $optionalChecksum = $env:MISSIVE_INSTALLER_SHA256.Trim()
+    $sha256File = Join-Path $toolsDir 'resolved-installer.sha256'
+    if (-not (Test-Path -LiteralPath $sha256File)) {
+        throw 'Package is missing tools/resolved-installer.sha256. Rebuild the package from an updated repository.'
     }
-    if ($optionalChecksum) {
-        $actual = Get-InstallerSha256 -FilePath $installerPath
-        $expected = $optionalChecksum.ToLowerInvariant()
-        if ($actual -ne $expected) {
-            throw "Installer SHA256 mismatch. Expected $expected, got $actual. Refusing to install."
-        }
-        Write-MissiveLog 'SHA256 verification passed.'
+    $expectedSha = ([System.IO.File]::ReadAllText($sha256File).Trim() -replace '\s', '').ToLowerInvariant()
+    if ($expectedSha -notmatch '^[a-f0-9]{64}$') {
+        throw "Invalid SHA256 in resolved-installer.sha256: $expectedSha"
     }
+
+    Get-ChocolateyWebFile `
+        -PackageName $chocoPkgName `
+        -FileFullPath $installerPath `
+        -Url $MissiveDownloadUrl `
+        -Checksum $expectedSha `
+        -ChecksumType sha256
 
     $arguments = @(
         '/S'

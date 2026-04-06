@@ -26,6 +26,7 @@
     <packageSourceUrl>https://github.com/Graphixa/missive-chocolatey</packageSourceUrl>
     <docsUrl>https://missiveapp.com/help</docsUrl>
     <licenseUrl>https://missiveapp.com/terms</licenseUrl>
+    <iconUrl>https://cdn.prod.website-files.com/66c7823b4706f4a0a95d2d31/67100e63f9a272804370b0ac_missive-webclip.png</iconUrl>
     <tags>missive email collaboration team-chat community</tags>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>https://missiveapp.com/changelog</releaseNotes>

@@ -95,4 +95,8 @@ Write-JsonAtomic -Path $statePath -Object $state
 $nuspecPath = Join-Path $RepoRoot 'chocolatey\missive\missive.nuspec'
 Set-MissiveNuspecVersion -NuspecPath $nuspecPath -VersionString $nuspecVersion
 
-Write-Host "Updated config and nuspec for package version $nuspecVersion (detected: $Version)."
+$sha256Path = Join-Path $RepoRoot 'chocolatey\missive\tools\resolved-installer.sha256'
+$hashNormalized = $ResolvedInstallerSha256.Trim().ToLowerInvariant()
+[System.IO.File]::WriteAllText($sha256Path, $hashNormalized)
+
+Write-Host "Updated config, nuspec, and tools/resolved-installer.sha256 for package version $nuspecVersion (detected: $Version)."

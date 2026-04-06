@@ -18,6 +18,7 @@ $required = @(
     'tools/chocolateyInstall.ps1'
     'tools/chocolateyUninstall.ps1'
     'tools/helpers.ps1'
+    'tools/resolved-installer.sha256'
 )
 
 $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $NupkgPath).Path)
