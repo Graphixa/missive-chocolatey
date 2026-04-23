@@ -1,0 +1,36 @@
+VERIFICATION
+
+Purpose
+  This file helps moderators and maintainers confirm that the SHA256 in
+  tools\chocolateyInstall.ps1 matches the vendor installer the package
+  is intended to download. It is the same class of information Chocolatey
+  Community packages often include for downloaded binaries.
+
+Package type
+  This is a community downloader package. The nupkg does not ship the Missive
+  installer. At install time, chocolateyInstall.ps1 uses Install-ChocolateyPackage
+  to download from the official URL below and validates with the SHA256
+  embedded in the install script.
+
+Install-time download URL
+  (used in chocolateyInstall.ps1; may redirect to a versioned .exe on the vendor CDN)
+  https://mail.missiveapp.com/download/win
+
+Resolved URL
+  (final URL after redirects, recorded at the time this package metadata was
+  last updated; use this to fetch the same file the checksum is based on)
+  https://downloads.missiveapp.com/11.12.4/Missive%20Setup%2011.12.4.exe
+
+Algorithm
+  SHA256
+
+Checksum:
+  07ea01d10ccc6a4f727ac4847c0d4895d79f1494cc4aa7beb073896c69823175
+
+How to verify
+  1) Download the installer (same bytes as a normal install) from the
+     Install-time download URL or Resolved URL above.
+  2) Save the file locally (name does not matter).
+  3) In PowerShell 5+:
+     Get-FileHash -Algorithm SHA256 -LiteralPath ".\<your-downloaded-file>.exe"
+  4) The Hash line must match the Checksum (hex, case-insensitive).

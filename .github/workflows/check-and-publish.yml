@@ -1,0 +1,151 @@
+# Checks for a new Missive installer, updates the package, smoke-tests when metadata changes,
+# commits to GitHub, then (by default) pushes the .nupkg to Chocolatey Community.
+#
+# Flow when Missive ships a new build (files differ from HEAD):
+#   1) Update-Package.ps1 — download, SHA256, update nuspec + tools
+#   2) Full smoke (install + uninstall)
+#   3) Commit + push to GitHub
+#   4) Pack + verify the .nupkg again, then push to Chocolatey (if CHOCOLATEY_API_KEY is set)
+#
+# When nothing changed vs HEAD: fast pack + verify only; no commit; no Chocolatey push.
+#
+# Testing without publishing: scheduled runs only update + smoke + commit. To publish, run manually with "Push to Chocolatey" turned ON.
+name: Check and publish
+
+on:
+  schedule:
+    - cron: '0 10 * * *' # 10:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      push_to_chocolatey:
+        description: 'After a successful update + smoke, push .nupkg to Chocolatey (needs CHOCOLATEY_API_KEY). Turn OFF while testing without publishing.'
+        type: boolean
+        default: false
+      skip_duplicate_on_push:
+        description: 'Pass --skip-duplicate when pushing (safe for reruns)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: check-and-publish
+  cancel-in-progress: false
+
+jobs:
+  check-and-publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install Chocolatey if missing
+        shell: pwsh
+        run: |
+          $chocoExe = Join-Path $env:ProgramData 'chocolatey\bin\choco.exe'
+          if (-not (Test-Path -LiteralPath $chocoExe)) {
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value (Join-Path $env:ProgramData 'chocolatey\bin')
+
+      - name: Verify Chocolatey CLI
+        shell: pwsh
+        run: choco --version
+
+      - name: Update package from upstream installer
+        shell: pwsh
+        run: ./scripts/Update-Package.ps1
+
+      - name: Stage update and detect changes vs HEAD
+        id: upstream
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          git add missive/missive.nuspec missive/tools/chocolateyInstall.ps1 missive/tools/resolved-installer.sha256 missive/tools/VERIFICATION.txt
+          if (git diff --cached --quiet) {
+            Write-Host 'No upstream metadata change vs HEAD; skipping smoke and commit.'
+            Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'changed=false' -Encoding utf8
+          } else {
+            Write-Host 'Upstream metadata changed; will run full smoke test before commit.'
+            Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'changed=true' -Encoding utf8
+          }
+
+      - name: Full smoke test (pack, verify, install, uninstall) — only when upstream changed
+        if: ${{ steps.upstream.outputs.changed == 'true' }}
+        shell: pwsh
+        run: ./scripts/Test-Package.ps1 -SmokeTest
+
+      - name: Commit metadata and tools when upstream changed
+        if: ${{ steps.upstream.outputs.changed == 'true' }}
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          git add missive/missive.nuspec missive/tools/chocolateyInstall.ps1 missive/tools/resolved-installer.sha256 missive/tools/VERIFICATION.txt
+          if (git diff --cached --quiet) {
+            throw 'Expected staged metadata changes after smoke test.'
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update Missive installer metadata"
+          git push
+
+      # After smoke + commit: publish to Chocolatey (manual only while testing).
+      - name: Set up .NET (nuget push)
+        if: >-
+          ${{ success() &&
+              steps.upstream.outputs.changed == 'true' &&
+              (github.event_name == 'workflow_dispatch' && inputs.push_to_chocolatey == true) }}
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Pack + verify (immediately before Chocolatey push)
+        if: >-
+          ${{ success() &&
+              steps.upstream.outputs.changed == 'true' &&
+              (github.event_name == 'workflow_dispatch' && inputs.push_to_chocolatey == true) }}
+        shell: pwsh
+        run: ./scripts/Test-Package.ps1
+
+      - name: Push to Chocolatey Community
+        if: >-
+          ${{ success() &&
+              steps.upstream.outputs.changed == 'true' &&
+              (github.event_name == 'workflow_dispatch' && inputs.push_to_chocolatey == true) }}
+        env:
+          CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+          EVENT_NAME: ${{ github.event_name }}
+          SKIP_DUP: ${{ github.event_name != 'workflow_dispatch' || inputs.skip_duplicate_on_push }}
+        shell: pwsh
+        run: |
+          Set-StrictMode -Version Latest
+          $ErrorActionPreference = 'Stop'
+          if (-not $env:CHOCOLATEY_API_KEY) {
+            Write-Host 'CHOCOLATEY_API_KEY is not set; skipping Chocolatey push.'
+            exit 0
+          }
+          $nupkg = Get-ChildItem -Path 'missive' -Filter '*.nupkg' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $nupkg) { throw 'No .nupkg found after pack.' }
+          $args = @('nuget', 'push', $nupkg.FullName, '--api-key', $env:CHOCOLATEY_API_KEY, '--source', 'https://push.chocolatey.org/')
+          if ($env:SKIP_DUP -in @('true', 'True', '1')) { $args += '--skip-duplicate' }
+          & dotnet @args
+
+      - name: Pack + verify (fast) — when upstream unchanged
+        if: ${{ steps.upstream.outputs.changed == 'false' }}
+        shell: pwsh
+        run: ./scripts/Test-Package.ps1
+
+      - name: Upload .nupkg artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: missive-nupkg
+          path: missive/*.nupkg
+          if-no-files-found: error

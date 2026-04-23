@@ -9,6 +9,24 @@ $PublicDesktopShortcut = Join-Path $env:Public 'Desktop\Missive.lnk'
 
 Write-MissiveLog 'Starting Missive package uninstall.'
 
+$vendorUninstall = Get-MissiveVendorUninstallerPath -InstallPath $InstallPath
+if ($vendorUninstall) {
+    $chocoPkgName = if ($env:ChocolateyPackageName) { $env:ChocolateyPackageName } else { 'missive' }
+    Write-MissiveLog "Running vendor uninstaller via Chocolatey helper: $vendorUninstall"
+    $packageArgs = @{
+        packageName    = $chocoPkgName
+        fileType       = 'exe'
+        file           = $vendorUninstall
+        silentArgs     = '/S'
+        validExitCodes = @(0)
+    }
+    try {
+        Uninstall-ChocolateyPackage @packageArgs
+    } catch {
+        Write-MissiveLog "Vendor uninstall helper reported: $($_.Exception.Message)"
+    }
+}
+
 $entry = Get-MissiveUninstallEntry
 if ($entry) {
     $quiet = $entry.QuietUninstallString
@@ -41,19 +59,6 @@ if ($entry) {
                 Write-MissiveLog "Uninstall runner: $($_.Exception.Message)"
             }
         }
-    }
-}
-
-$vendorUninstall = Get-MissiveVendorUninstallerPath -InstallPath $InstallPath
-if ($vendorUninstall) {
-    Write-MissiveLog "Running vendor uninstaller: $vendorUninstall"
-    try {
-        $p = Start-Process -FilePath $vendorUninstall -ArgumentList '/S' -Wait -PassThru -ErrorAction SilentlyContinue
-        if ($p -and $p.ExitCode -ne 0) {
-            Write-MissiveLog "Vendor uninstaller exit code: $($p.ExitCode)"
-        }
-    } catch {
-        Write-MissiveLog "Vendor uninstaller: $($_.Exception.Message)"
     }
 }
 

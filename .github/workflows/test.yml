@@ -1,13 +1,20 @@
 name: Test
 
 on:
+  pull_request:
   workflow_dispatch:
+    inputs:
+      smoke_test:
+        description: 'Run install/uninstall smoke test (requires admin on runner)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
-  smoke-test:
+  test:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -27,6 +34,20 @@ jobs:
         shell: pwsh
         run: choco --version
 
-      - name: Full smoke test (pack, install, verify shortcuts, uninstall)
+      - name: Pack + verify (fast)
+        if: ${{ github.event_name == 'pull_request' || inputs.smoke_test == false }}
         shell: pwsh
         run: ./scripts/Test-Package.ps1
+
+      - name: Full smoke test (pack, verify, install, uninstall)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.smoke_test == true }}
+        shell: pwsh
+        run: ./scripts/Test-Package.ps1 -SmokeTest
+
+      - name: Upload .nupkg artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: missive-nupkg
+          path: missive/*.nupkg
+          if-no-files-found: error

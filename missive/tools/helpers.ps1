@@ -2,9 +2,11 @@
 
 function Get-MissiveInstallRoot {
     <#
-        Uses the Windows system drive (e.g. C: or D:) so installs work when Windows is not on C:.
+        Installs under the Chocolatey tools location so it is consistent with common community package patterns.
+        This resolves to $env:ChocolateyToolsLocation when set, otherwise typically C:\tools.
     #>
-    return (Join-Path $env:SystemDrive 'Missive')
+    $tools = Get-ToolsLocation
+    return (Join-Path $tools 'Missive')
 }
 
 function Write-MissiveLog {
@@ -80,7 +82,7 @@ function Get-MissiveUninstallEntry {
             $loc = $key.InstallLocation
             $name = $key.DisplayName
             if (($loc -and $loc.Trim().StartsWith($missiveRoot, [System.StringComparison]::OrdinalIgnoreCase)) -or
-                ($name -and $name -like '*Missive*')) {
+                ($name -and $name -eq 'Missive')) {
                 return $key
             }
         }

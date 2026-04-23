@@ -13,7 +13,7 @@
 ## This Chocolatey package
 
 - Downloads the Windows installer at install time from Missive’s official URL (`https://mail.missiveapp.com/download/win`); the package does **not** redistribute Missive binaries.
-- Installs to `%SystemDrive%\Missive` (typically `C:\Missive` when the system drive is `C:`) using Missive’s silent installer switches.
+- Installs to `%ChocolateyToolsLocation%\Missive` (typically `C:\tools\Missive`) using Missive’s silent installer switches.
 - Creates all-users Start Menu and Public Desktop shortcuts to `Missive.exe` under that folder.
 
 ## Notes
@@ -26,8 +26,8 @@
     <packageSourceUrl>https://github.com/Graphixa/missive-chocolatey</packageSourceUrl>
     <docsUrl>https://missiveapp.com/help</docsUrl>
     <licenseUrl>https://missiveapp.com/terms</licenseUrl>
-    <iconUrl>https://cdn.prod.website-files.com/66c7823b4706f4a0a95d2d31/67100e63f9a272804370b0ac_missive-webclip.png</iconUrl>
-    <tags>missive email collaboration team-chat community</tags>
+    <iconUrl>https://cdn.jsdelivr.net/gh/Graphixa/missive-chocolatey@main/assets/missive.png</iconUrl>
+    <tags>missive email chat mail collaboration team-chat community productivity</tags>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <releaseNotes>https://missiveapp.com/changelog</releaseNotes>
   </metadata>
