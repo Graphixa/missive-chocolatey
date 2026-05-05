@@ -33,6 +33,26 @@ if (-not $choco) {
     throw 'Chocolatey CLI (choco) not found in PATH. Install Chocolatey first.'
 }
 
+function Get-ExpectedMissiveInstallRoot {
+    <#
+        Must match missive/tools/helpers.ps1 Get-MissiveInstallRoot (Get-ToolsLocation + '\Missive').
+        CI shells may not import Chocolatey helpers, so mirror common Chocolatey defaults here.
+    #>
+    if (Get-Command Get-ToolsLocation -ErrorAction SilentlyContinue) {
+        try {
+            return (Join-Path (& Get-ToolsLocation) 'Missive')
+        } catch { }
+    }
+    $toolsLoc = $env:ChocolateyToolsLocation
+    if ([string]::IsNullOrWhiteSpace($toolsLoc)) {
+        return Join-Path (Join-Path $env:SystemDrive 'tools') 'Missive'
+    }
+    if (-not ([System.IO.Path]::IsPathRooted($toolsLoc))) {
+        $toolsLoc = Join-Path $env:SystemDrive ($toolsLoc.TrimStart('\', '/'))
+    }
+    return Join-Path $toolsLoc 'Missive'
+}
+
 function Get-RepoInstallChecksum {
     param([Parameter(Mandatory)][string]$InstallScriptPath)
     $raw = Get-Content -LiteralPath $InstallScriptPath -Raw -Encoding UTF8
@@ -151,7 +171,7 @@ try {
             throw "choco install failed with exit code $LASTEXITCODE"
         }
 
-        $installRoot = Join-Path $env:SystemDrive 'Missive'
+        $installRoot = Get-ExpectedMissiveInstallRoot
         Write-TestLog "Install root: $installRoot"
         if (-not (Test-Path -LiteralPath $installRoot)) {
             throw "Install directory missing after install (expected $installRoot)."
