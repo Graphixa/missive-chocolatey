@@ -65,11 +65,16 @@ function Set-InstallScriptChecksumLiteral {
     $n = $Sha256LowerHex.Trim().ToLowerInvariant()
     if ($n -notmatch '^[a-f0-9]{64}$') { throw "Invalid SHA256: $Sha256LowerHex" }
     $raw = Get-Content -LiteralPath $InstallScriptPath -Raw -Encoding UTF8
-    $rx = [regex]"(?m)(^\s*checksum\s*=\s*')([a-f0-9]{64})(')"
-    $out = $rx.Replace($raw, "`${1}$n`${3}", 1)
-    if ($out -eq $raw) {
+    $pattern = "(?m)^\s*checksum\s*=\s*'([a-f0-9]{64})'\s*$"
+    $m = [regex]::Match($raw, $pattern, 'IgnoreCase')
+    if (-not $m.Success) {
         throw "Could not update checksum literal in $InstallScriptPath (missing checksum = '...')."
     }
+    if ($m.Groups[1].Value.ToLowerInvariant() -eq $n) {
+        return
+    }
+    $rx = [regex]"(?m)(^\s*checksum\s*=\s*')([a-f0-9]{64})(')"
+    $out = $rx.Replace($raw, "`${1}$n`${3}", 1)
     Set-Content -LiteralPath $InstallScriptPath -Value $out -Encoding UTF8
 }
 
