@@ -52,7 +52,7 @@ function Set-XmlFirstMatchValue {
     $ns = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
     $ns.AddNamespace('n', 'http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd')
     $node = $xml.SelectSingleNode($XPath, $ns)
-    if (-not $node) { throw "XPath not found in $Path: $XPath" }
+    if (-not $node) { throw "XPath not found in ${Path}: $XPath" }
     $node.InnerText = $Value
     $xml.Save($Path)
 }
