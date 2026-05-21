@@ -68,13 +68,15 @@ jobs:
           Set-StrictMode -Version Latest
           $ErrorActionPreference = 'Stop'
           git add missive/missive.nuspec missive/tools/chocolateyInstall.ps1 missive/tools/resolved-installer.sha256 missive/tools/VERIFICATION.txt
-          if (git diff --cached --quiet) {
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
             Write-Host 'No upstream metadata change vs HEAD; skipping smoke and commit.'
             Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'changed=false' -Encoding utf8
           } else {
             Write-Host 'Upstream metadata changed; will run full smoke test before commit.'
             Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value 'changed=true' -Encoding utf8
           }
+          exit 0
 
       - name: Full smoke test (pack, verify, install, uninstall) — only when upstream changed
         if: ${{ steps.upstream.outputs.changed == 'true' }}
@@ -88,7 +90,8 @@ jobs:
           Set-StrictMode -Version Latest
           $ErrorActionPreference = 'Stop'
           git add missive/missive.nuspec missive/tools/chocolateyInstall.ps1 missive/tools/resolved-installer.sha256 missive/tools/VERIFICATION.txt
-          if (git diff --cached --quiet) {
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
             throw 'Expected staged metadata changes after smoke test.'
           }
           git config user.name "github-actions[bot]"

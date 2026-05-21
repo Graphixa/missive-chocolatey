@@ -53,6 +53,7 @@ function Set-XmlFirstMatchValue {
     $ns.AddNamespace('n', 'http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd')
     $node = $xml.SelectSingleNode($XPath, $ns)
     if (-not $node) { throw "XPath not found in ${Path}: $XPath" }
+    if ($node.InnerText -eq $Value) { return }
     $node.InnerText = $Value
     $xml.Save($Path)
 }
@@ -123,6 +124,12 @@ How to verify
      Get-FileHash -Algorithm SHA256 -LiteralPath ".\<your-downloaded-file>.exe"
   4) The Hash line must match the Checksum (hex, case-insensitive).
 "@
+    $existing = if (Test-Path -LiteralPath $Path) {
+        (Get-Content -LiteralPath $Path -Raw -Encoding UTF8)
+    } else {
+        ''
+    }
+    if ($existing -ceq $content) { return }
     Set-Content -LiteralPath $Path -Value $content -Encoding UTF8
 }
 
@@ -180,7 +187,10 @@ try {
     Write-Host "NuspecVer:    $nuspecVersion"
 
     Set-XmlFirstMatchValue -Path $nuspecPath -XPath '/n:package/n:metadata/n:version' -Value $nuspecVersion
-    [System.IO.File]::WriteAllText($shaPath, $sha256)
+    $existingSha = (Get-Content -LiteralPath $shaPath -Raw -Encoding UTF8).Trim()
+    if ($existingSha -cne $sha256) {
+        [System.IO.File]::WriteAllText($shaPath, $sha256)
+    }
     Set-InstallScriptChecksumLiteral -InstallScriptPath $installScriptPath -Sha256LowerHex $sha256
     Write-VerificationTxt -Path $verificationPath -DownloadUrl $DownloadUrl -ResolvedUrl $resolvedUrl -Sha256LowerHex $sha256
 
