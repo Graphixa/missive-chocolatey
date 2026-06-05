@@ -23,7 +23,7 @@ try {
         fileType       = 'exe'
         url            = $MissiveDownloadUrl
         silentArgs     = $silent
-        checksum       = '07ea01d10ccc6a4f727ac4847c0d4895d79f1494cc4aa7beb073896c69823175'
+        checksum       = '3bb7b755a4edbed1119d273dc66c6d71ba7ac3d4b241901ae8c4b51a05b35014'
         checksumType   = 'sha256'
         validExitCodes = @(0)
     }
@@ -50,3 +50,4 @@ try {
 }
 finally {
 }
+

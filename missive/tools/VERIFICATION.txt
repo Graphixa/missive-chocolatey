@@ -19,13 +19,13 @@ Install-time download URL
 Resolved URL
   (final URL after redirects, recorded at the time this package metadata was
   last updated; use this to fetch the same file the checksum is based on)
-  https://downloads.missiveapp.com/11.12.4/Missive%20Setup%2011.12.4.exe
+  https://downloads.missiveapp.com/11.29.0/Missive%20Setup%2011.29.0.exe
 
 Algorithm
   SHA256
 
 Checksum:
-  07ea01d10ccc6a4f727ac4847c0d4895d79f1494cc4aa7beb073896c69823175
+  3bb7b755a4edbed1119d273dc66c6d71ba7ac3d4b241901ae8c4b51a05b35014
 
 How to verify
   1) Download the installer (same bytes as a normal install) from the
